@@ -27,10 +27,15 @@ import {
   TestTube2,
   ListTodo
 } from "lucide-react";
+import { NotificationCenter } from "@/components/NotificationCenter";
+import { TrialBanner } from "@/components/TrialBanner";
 import { PaymentSandbox } from "../components/PaymentSandbox";
 import { FinanceModule } from "../components/FinanceModule";
 import { AuditLogsModule } from "../components/AuditLogsModule";
-// Componentes de la Fase 2 actualizados
+import { GuestModule } from "../components/GuestModule";
+import { SettingsModule } from "@/components/SettingsModule";
+import { PremiumGuard } from "@/components/PremiumGuard";
+// Componentes de la Fase 2/3 actualizados
 
 
 function StatCard({ title, value, change, icon: Icon, color }: { title: string, value: string, change: string, icon: any, color: string }) {
@@ -161,6 +166,8 @@ function AuraDashboardContent() {
           {showTour && <WelcomeTour onComplete={handleTourComplete} />}
         </AnimatePresence>
 
+        <TrialBanner />
+
         {/* Dashboard Header */}
         <header className="px-8 lg:px-12 py-8 flex justify-between items-center border-b border-border sticky top-0 bg-background/80 backdrop-blur-xl z-10 transition-colors">
           <motion.div 
@@ -177,10 +184,7 @@ function AuraDashboardContent() {
           <div className="flex items-center space-x-6">
             <div className="flex items-center border-r border-border pr-6 space-x-3">
               <ThemeToggle />
-              <button className="p-2 text-muted hover:text-primary transition-colors relative">
-                <Bell size={20} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-secondary rounded-full border-2 border-background"></span>
-              </button>
+              <NotificationCenter />
             </div>
             <UserButton />
           </div>
@@ -241,18 +245,13 @@ function AuraDashboardContent() {
               </motion.div>
             )}
             {activeTab === "Huéspedes" && (
-              <motion.div key="placeholder" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-32 text-center">
-                <div className="w-16 h-16 bg-accent rounded-3xl flex items-center justify-center mb-6">
-                  {role === "RESERVADOR" ? <Search className="text-red-500" size={32} /> : <Users className="text-muted" size={32} />}
-                </div>
-                <h3 className="text-xl font-bold font-outfit text-foreground">
-                  {role === "RESERVADOR" ? "Acceso Restringido" : "Módulo en Desarrollo"}
-                </h3>
-                <p className="text-sm text-muted max-w-xs mt-2">
-                  {role === "RESERVADOR" 
-                    ? "Tu nivel de acceso no permite visualizar este apartado. Contacta al administrador." 
-                    : "Estamos integrando la potencia completa de Aura para este apartado."}
-                </p>
+              <motion.div key="guests" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                <GuestModule />
+              </motion.div>
+            )}
+            {activeTab === "Configuración" && (
+              <motion.div key="settings" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                <SettingsModule />
               </motion.div>
             )}
           </AnimatePresence>

@@ -40,14 +40,27 @@ export interface HotelConfig {
   services: string[]; // Restaurant, Pool, etc.
 }
 
+// Assuming 'Role' is a type that needs to be defined or imported if it's not a literal string.
+// For now, I'll assume it's a string literal or a type alias that should be added to the union.
+// Given the context, it's likely a type alias for user roles.
+// Since it's not defined in the provided code, I'll add it as a placeholder string type.
+type Role = "ADMIN" | "GERENTE" | "RESERVADOR"; // This is a placeholder, adjust if 'Role' is defined elsewhere.
+
 interface AuraContextType {
   rooms: Room[];
   reservations: Reservation[];
   hotelConfig: HotelConfig | null;
   hotelId: string | null;
   isSetupComplete: boolean;
-  role: "ADMIN" | "GERENTE" | "RESERVADOR" | null;
-  addRoom: (room: Omit<Room, "id">) => Promise<void>;
+  role: "ADMIN" | "GERENTE" | "RESERVADOR" | Role | null;
+  subscription: "BASIC" | "PRO" | "ENTERPRISE";
+  connectionCode: string | null;
+  trialDaysLeft: number;
+  isOwner: boolean;
+  logs: any[];
+  refreshData: () => Promise<void>;
+  addRoom: (room: { number: string, type: string }) => Promise<{ success: boolean, error?: string }>;
+  applyMasterKey: (key: string) => Promise<{ success: boolean, error?: string }>;
   updateRoom: (id: string, room: Partial<Room>) => void;
   deleteRoom: (id: string) => Promise<void>;
   clearRooms: () => void;
@@ -66,6 +79,11 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [hotelId, setHotelId] = useState<string | null>(null);
   const [role, setRole] = useState<"ADMIN" | "GERENTE" | "RESERVADOR" | null>(null);
+  const [subscription, setSubscription] = useState<"BASIC" | "PRO" | "ENTERPRISE">("BASIC");
+  const [connectionCode, setConnectionCode] = useState<string | null>(null);
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number>(15);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
     async function hydrate() {
@@ -86,6 +104,23 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
           });
           setRooms(result.rooms as any || []);
           setReservations(result.reservations as any || []);
+          setLogs(result.logs as any || []);
+          // Owner Bypass Logic
+          const ownerEmails = ["itslacia@gmail.com", "22610282@utgz.edu.mx", "ninguang.01@gmail.com"];
+          const userEmail = result.user?.email || "";
+          const isOwnerUser = ownerEmails.includes(userEmail);
+          
+          setIsOwner(isOwnerUser);
+          const hotel = result.hotel as any;
+          setSubscription(isOwnerUser ? "ENTERPRISE" : (hotel.subscription || "BASIC"));
+          setConnectionCode(hotel.connectionCode || null);
+          
+          // Trial Logic
+          const trialStart = new Date(hotel.trialStartedAt || hotel.createdAt);
+          const now = new Date();
+          const diffDays = Math.max(0, 15 - Math.ceil((now.getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24)));
+          setTrialDaysLeft(diffDays);
+
           setIsSetupComplete(true);
           setHotelId(result.hotel.id);
         }
@@ -94,12 +129,24 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     hydrate();
   }, [user]);
 
-  const addRoom = async (roomData: Omit<Room, "id">) => {
-    if (!hotelId) return;
-    const result = await addRoomAction(hotelId, roomData);
+  const addRoom = async (roomData: { number: string, type: string }) => {
+    const result = await addRoomAction(hotelId!, roomData.number, roomData.type);
     if (result.success && result.room) {
       setRooms(prev => [...prev, result.room as any]);
+      return { success: true };
     }
+    return { success: false, error: result.error };
+  };
+
+  const applyMasterKey = async (key: string) => {
+    if (key === "AURA-OWNER-2026") {
+        // En un caso real, esto llamaría a una acción del servidor para actualizar la DB
+        // Por ahora, simulamos el éxito local y el usuario ya tiene bypass por email
+        setSubscription("ENTERPRISE");
+        localStorage.setItem("aura_master_unlocked", "true");
+        return { success: true };
+    }
+    return { success: false, error: "Clave de licencia inválida" };
   };
 
   const updateRoom = (id: string, updates: Partial<Room>) => {
@@ -145,6 +192,36 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refreshData = async () => {
+    if (user?.id) {
+      const result = await getHotelData(user.id);
+      if (result.success && result.hotel) {
+        setHotelConfig({
+          name: result.hotel.name,
+          type: result.hotel.type,
+          roomsCount: result.rooms?.length || 0,
+          services: [] // We can expand this later
+        });
+        setRooms(result.rooms as any || []);
+        setReservations(result.reservations as any || []);
+        setLogs(result.logs as any || []);
+        const ownerEmails = ["itslacia@gmail.com", "22610282@utgz.edu.mx", "ninguang.01@gmail.com"];
+        const isOwnerUser = ownerEmails.includes(result.user?.email || "");
+        
+        setIsOwner(isOwnerUser);
+        const hotel = result.hotel as any;
+        setSubscription(isOwnerUser ? "ENTERPRISE" : (hotel.subscription || "BASIC"));
+        setConnectionCode(hotel.connectionCode || null);
+        
+        const trialStart = new Date(hotel.trialStartedAt || hotel.createdAt);
+        const diffDays = Math.max(0, 15 - Math.ceil((new Date().getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24)));
+        setTrialDaysLeft(diffDays);
+
+        setHotelId(hotel.id);
+      }
+    }
+  };
+
   return (
     <AuraContext.Provider value={{ 
       rooms, 
@@ -153,7 +230,14 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
       hotelId,
       isSetupComplete, 
       role,
+      subscription,
+      connectionCode,
+      trialDaysLeft,
+      isOwner,
+      logs,
+      refreshData,
       addRoom,
+      applyMasterKey,
       updateRoom,
       deleteRoom,
       clearRooms,

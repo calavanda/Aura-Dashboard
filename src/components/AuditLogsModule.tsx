@@ -3,79 +3,77 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { 
-  ClipboardList, 
-  User, 
+  Activity, 
   Clock, 
-  Settings,
-  ShieldCheck,
-  AlertTriangle
+  ShieldCheck, 
+  AlertTriangle,
+  CreditCard,
+  ClipboardList
 } from "lucide-react";
+import { useAura } from "@/context/AuraContext";
 
 export function AuditLogsModule() {
-  // Mock logs for demonstration
-  const logs = [
-    { id: 1, user: "itslacia@gmail.com", action: "Check-in Realizado", details: "Habitación 101 - Juan Pérez", time: "Hace 5 minutos", level: "info" },
-    { id: 2, user: "admin", action: "Configuración Actualizada", details: "Ajuste de tarifas temporada alta", time: "Hace 20 minutos", level: "warning" },
-    { id: 3, user: "22610282@utgz.edu.mx", action: "Nueva Reserva", details: "Suite Presidencial - María Garcia", time: "Hace 1 hora", level: "info" },
-    { id: 4, user: "system", action: "Respaldo Automático", details: "Cloud MongoDB Atlas Sync", time: "Hace 3 horas", level: "success" },
-    { id: 5, user: "gerente", action: "Limpieza Confirmada", details: "Habitación 204", time: "Hace 5 horas", level: "info" },
-  ];
+  const { logs } = useAura();
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      <div className="flex justify-between items-end">
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="flex justify-between items-end mb-8">
         <div>
-          <h3 className="text-3xl font-bold font-outfit text-foreground tracking-tight">Logs de Sistema</h3>
-          <p className="text-muted text-sm mt-2">Historial detallado de auditoría y operaciones.</p>
+          <h3 className="text-3xl font-bold font-outfit text-foreground tracking-tight">Registro de Auditoría</h3>
+          <p className="text-muted text-sm mt-2">Seguimiento en tiempo real de todas las acciones del sistema.</p>
         </div>
-        <div className="flex gap-2">
-          <button className="px-4 py-2 bg-accent text-foreground text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-border transition-all">Exportar CSV</button>
+        <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-widest bg-primary/10 px-4 py-2 rounded-full">
+          <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+          En Vivo
         </div>
       </div>
 
-      <div className="glass rounded-[40px] overflow-hidden border border-border/50">
-        <div className="divide-y divide-border">
-          {logs.map((log, idx) => (
-            <motion.div 
+      <div className="space-y-4">
+        {logs && logs.length > 0 ? (
+          logs.map((log: any, idx: number) => (
+            <motion.div
               key={log.id}
-              initial={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.05 }}
-              className="flex items-center gap-6 p-6 hover:bg-accent/30 transition-all group"
+              className="glass p-5 rounded-3xl flex items-center gap-6 group hover:border-primary/30 transition-all"
             >
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
-                log.level === 'warning' ? 'bg-amber-500/10 text-amber-500' : 
-                log.level === 'success' ? 'bg-emerald-500/10 text-emerald-500' : 
-                'bg-primary/10 text-primary'
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                log.action.toLowerCase().includes('error') || log.action.includes('FALLIDO') ? 'bg-red-500/10 text-red-500' : 
+                log.action.includes('PAGADO') || log.action.includes('COMPLETO') ? 'bg-emerald-500/10 text-emerald-500' :
+                'bg-blue-500/10 text-blue-500'
               }`}>
-                {log.level === 'warning' ? <AlertTriangle size={20} /> : 
-                 log.level === 'success' ? <ShieldCheck size={20} /> : 
-                 <ClipboardList size={20} />}
+                {log.action.toLowerCase().includes('pago') ? <CreditCard size={20} /> : <Activity size={20} />}
               </div>
 
               <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-foreground">{log.action}</span>
-                  <span className="w-1 h-1 bg-muted rounded-full"></span>
-                  <span className="text-[10px] font-bold text-muted uppercase tracking-widest">{log.user}</span>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{log.action}</p>
+                    <p className="text-xs text-muted mt-1">{log.details || 'Sin detalles adicionales'}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-foreground uppercase">{log.userName}</p>
+                    <p className="text-[10px] text-muted mt-1">{new Date(log.timestamp).toLocaleTimeString()}</p>
+                  </div>
                 </div>
-                <p className="text-xs text-muted mt-1">{log.details}</p>
-              </div>
-
-              <div className="text-right flex flex-col items-end gap-1">
-                <div className="flex items-center gap-1.5 text-muted">
-                  <Clock size={12} />
-                  <span className="text-[10px] font-bold uppercase tracking-tighter">{log.time}</span>
-                </div>
-                <div className="w-2 h-2 rounded-full bg-border group-hover:bg-primary transition-colors"></div>
               </div>
             </motion.div>
-          ))}
-        </div>
+          ))
+        ) : (
+          <div className="glass p-20 rounded-[40px] text-center space-y-4">
+             <Activity size={40} className="mx-auto text-muted mb-4" />
+             <h4 className="text-lg font-bold font-outfit">Sin actividad reciente</h4>
+             <p className="text-sm text-muted">Las acciones realizadas por el equipo aparecerán aquí.</p>
+          </div>
+        )}
+      </div>
         
-        <div className="p-6 bg-accent/20 text-center">
-          <button className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] hover:tracking-[0.3em] transition-all">Ver Historial Completo</button>
-        </div>
+      <div className="p-6 bg-accent/20 text-center rounded-3xl mt-8">
+        <button className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] hover:tracking-[0.3em] transition-all flex items-center gap-2 mx-auto">
+          <Clock size={14} />
+          Ver Historial Completo
+        </button>
       </div>
     </div>
   );

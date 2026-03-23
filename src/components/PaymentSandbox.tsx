@@ -15,7 +15,7 @@ import {
 import { useAura } from "@/context/AuraContext";
 
 export function PaymentSandbox() {
-  const { hotelId } = useAura();
+  const { hotelId, refreshData } = useAura();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   
@@ -59,6 +59,8 @@ export function PaymentSandbox() {
 
       const payData = await payResponse.json();
       if (!payResponse.ok) throw new Error(payData.error || "Error al procesar pago");
+
+      await refreshData();
 
       setStatus({ 
         type: 'success', 

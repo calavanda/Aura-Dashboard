@@ -96,23 +96,42 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
         {(role === "ADMIN" || role === "GERENTE") && (
           <>
             <div className="pt-8 pb-2 px-4 text-[10px] font-bold text-muted uppercase tracking-widest">Avanzado</div>
-            <SidebarItem icon={Settings} label="Configuración" />
+            <SidebarItem 
+              icon={Settings} 
+              label="Configuración" 
+              active={activeTab === "Configuración"} 
+              onClick={() => setActiveTab("Configuración")} 
+            />
           </>
         )}
       </nav>
 
       <div className="pt-8 border-t border-border">
-        <SidebarItem icon={LogOut} label="Cerrar Sesión" />
+        <SidebarItem icon={LogOut} label="Cerrar Sesión" onClick={() => {}} />
       </div>
     </aside>
   );
 }
 
-function SidebarItem({ icon: Icon, label }: { icon: any; label: string }) {
+function SidebarItem({ icon: Icon, label, active, onClick }: { icon: any; label: string; active?: boolean; onClick?: () => void }) {
   return (
-    <div className="flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer text-muted hover:text-foreground hover:bg-accent transition-all">
-      <Icon size={20} />
-      <span className="text-sm">{label}</span>
+    <div 
+      onClick={onClick}
+      className={cn(
+        "group flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 relative overflow-hidden",
+        active 
+          ? "bg-primary text-background font-semibold" 
+          : "text-muted hover:text-foreground hover:bg-accent"
+      )}
+    >
+      <div className="flex items-center space-x-3 relative z-10">
+        <Icon size={20} className={active ? "text-background" : "group-hover:text-primary transition-colors"} />
+        <span className="text-sm">{label}</span>
+      </div>
+      {active && (
+        <motion.div layoutId="active-secondary" className="absolute inset-0 bg-primary z-0" />
+      )}
+      <ChevronRight size={14} className={cn("opacity-0 transition-all", active ? "opacity-100" : "group-hover:opacity-100")} />
     </div>
   );
 }
