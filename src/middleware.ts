@@ -1,7 +1,13 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
+const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api/public(.*)']);
+
+export default clerkMiddleware(async (auth, request) => {
+  if (!isPublicRoute(request)) {
+    await auth.protect();
+  }
+
   const response = NextResponse.next();
 
   // OWASP Security Headers
@@ -12,16 +18,21 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'origin-when-cross-origin');
   
-  // Content Security Policy (Basic)
-  // Note: For Clerk and other external scripts, CSP needs to be carefully tuned.
-  // This is a conservative starting point.
+  // Content Security Policy (Optimized for Clerk & Turnstile)
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.clerk.accounts.dev *.clerk.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; img-src 'self' blob: data: img.clerk.com; font-src 'self' fonts.gstatic.com; connect-src 'self' *.clerk.accounts.dev *.clerk.com;"
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.clerk.accounts.dev *.clerk.com clerk.com challenges.cloudflare.com; " +
+    "worker-src 'self' blob:; " +
+    "frame-src 'self' challenges.cloudflare.com *.clerk.accounts.dev *.clerk.com; " +
+    "style-src 'self' 'unsafe-inline' fonts.googleapis.com; " +
+    "img-src 'self' blob: data: img.clerk.com; " +
+    "font-src 'self' fonts.gstatic.com; " +
+    "connect-src 'self' *.clerk.accounts.dev *.clerk.com clerk.com;"
   );
 
   return response;
-}
+});
 
 export const config = {
   matcher: '/((?!api|_next/static|_next/image|favicon.ico).*)',

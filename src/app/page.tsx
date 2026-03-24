@@ -8,6 +8,7 @@ import { RoomGrid } from "@/components/RoomGrid";
 import { ReservationList } from "@/components/ReservationList";
 import { SetupWizard } from "@/components/Onboarding/SetupWizard";
 import { WelcomeTour } from "@/components/Onboarding/WelcomeTour";
+import { AddRoomModal } from "@/components/Onboarding/AddRoomModal";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -76,7 +77,7 @@ function StatCard({ title, value, change, icon: Icon, trend }: { title: string, 
   );
 }
 
-function DashboardHome() {
+function DashboardHome({ setIsAddRoomModalOpen }: { setIsAddRoomModalOpen: (open: boolean) => void }) {
   const { rooms, reservations, hotelConfig } = useAura();
   const { t } = useI18n();
   
@@ -134,7 +135,10 @@ function DashboardHome() {
                 </div>
                 <h4 className="text-white font-black text-2xl mb-3 tracking-tighter font-institutional uppercase">{t("empty.title")}</h4>
                 <p className="text-zinc-500 text-sm max-w-md mx-auto font-medium">{t("empty.desc")}</p>
-                <button className="mt-12 bg-white text-black font-black text-[10px] px-10 py-5 rounded-4xl uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all shadow-2xl font-institutional">
+                <button 
+                  onClick={() => setIsAddRoomModalOpen(true)}
+                  className="mt-12 bg-white text-black font-black text-[10px] px-10 py-5 rounded-4xl uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all shadow-2xl font-institutional"
+                >
                   {t("empty.button")}
                 </button>
               </div>
@@ -142,38 +146,40 @@ function DashboardHome() {
           </div>
         </div>
 
-        <div className="space-y-12">
-          <div className="px-2">
-            <h3 className="text-3xl font-black tracking-tighter text-white">{t("dash.intel.title")}</h3>
-            <p className="text-zinc-500 text-xs mt-1 font-institutional tracking-[0.2em] font-black">{t("dash.intel.subtitle")}</p>
-          </div>
-          
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="glass p-12 rounded-[3.5rem] bg-linear-to-br from-white/2 to-transparent border-white/5 relative overflow-hidden group shadow-[0_32px_80px_-20px_rgba(0,0,0,0.8)]"
-          >
-            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#FF385C]/5 blur-[120px] rounded-full pointer-events-none" />
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center mb-10 group-hover:border-[#3B82F6]/30 transition-all group-hover:shadow-[0_0_20px_rgba(59,130,246,0.1)]">
-                <TrendingUp size={32} className="text-[#3B82F6]" />
-              </div>
-              <h4 className="text-white font-black tracking-tighter text-4xl mb-6 leading-[0.9] font-institutional uppercase">{t("dash.intel.predictive")}<br/>{t("dash.intel.revenue")}</h4>
-              <p className="text-sm text-zinc-500 leading-relaxed font-semibold">
-                {t("dash.intel.desc")}
-              </p>
-              <div className="mt-12 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: "24%" }}
-                  transition={{ duration: 3, ease: "circOut" }}
-                  className="h-full bg-[#3B82F6] shadow-[0_0_20px_rgba(59,130,246,0.8)]" 
-                />
-              </div>
-              <p className="text-[9px] text-[#3B82F6] font-black uppercase tracking-[0.4em] mt-6 font-institutional">{t("dash.intel.convergence")}</p>
+        {rooms.length > 0 && (
+          <div className="space-y-12">
+            <div className="px-2">
+              <h3 className="text-3xl font-black tracking-tighter text-white">{t("dash.intel.title")}</h3>
+              <p className="text-zinc-500 text-xs mt-1 font-institutional tracking-[0.2em] font-black">{t("dash.intel.subtitle")}</p>
             </div>
-          </motion.div>
-        </div>
+            
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="glass p-12 rounded-[3.5rem] bg-linear-to-br from-white/2 to-transparent border-white/5 relative overflow-hidden group shadow-[0_32px_80px_-20px_rgba(0,0,0,0.8)]"
+            >
+              <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#FF385C]/5 blur-[120px] rounded-full pointer-events-none" />
+              <div className="relative z-10">
+                <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center mb-10 group-hover:border-[#3B82F6]/30 transition-all group-hover:shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+                  <TrendingUp size={32} className="text-[#3B82F6]" />
+                </div>
+                <h4 className="text-white font-black tracking-tighter text-4xl mb-6 leading-[0.9] font-institutional uppercase">{t("dash.intel.predictive")}<br/>{t("dash.intel.revenue")}</h4>
+                <p className="text-sm text-zinc-500 leading-relaxed font-semibold">
+                  {t("dash.intel.desc")}
+                </p>
+                <div className="mt-12 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: "24%" }}
+                    transition={{ duration: 3, ease: "circOut" }}
+                    className="h-full bg-[#3B82F6] shadow-[0_0_20px_rgba(59,130,246,0.8)]" 
+                  />
+                </div>
+                <p className="text-[9px] text-[#3B82F6] font-black uppercase tracking-[0.4em] mt-6 font-institutional">{t("dash.intel.convergence")}</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -183,6 +189,7 @@ function AuraDashboardContent() {
   const { isSetupComplete, hotelConfig, clearRooms, role } = useAura();
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [showTour, setShowTour] = useState(false);
+  const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
   const { user } = useUser();
   const { t } = useI18n();
 
@@ -213,8 +220,13 @@ function AuraDashboardContent() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-[#FF385C] selection:text-white overflow-hidden relative">
+    <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-[#FF385C] selection:text-white overflow-hidden relative" suppressHydrationWarning>
       <ParticleBackground />
+      
+      <AddRoomModal 
+        isOpen={isAddRoomModalOpen} 
+        onClose={() => setIsAddRoomModalOpen(false)} 
+      />
       
       {/* Dynamic Aura Glows */}
       <div className="glow-corner -top-[10vw] -left-[10vw] opacity-60 pointer-events-none" />
@@ -278,8 +290,8 @@ function AuraDashboardContent() {
           <div className="p-12 lg:p-16 max-w-[1700px] mx-auto min-h-[calc(100vh-160px)]">
             <AnimatePresence mode="wait">
               {activeTab === "Dashboard" && (
-                <motion.div key="dash" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
-                  <DashboardHome />
+                <motion.div key="dash" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} suppressHydrationWarning>
+                  <DashboardHome setIsAddRoomModalOpen={setIsAddRoomModalOpen} />
                 </motion.div>
               )}
               {activeTab === "Reservaciones" && (
@@ -346,163 +358,10 @@ function AuraDashboardContent() {
   );
 }
 
-function AuthGate() {
-  const { user, isLoaded } = useUser();
-  const [mounted, setMounted] = useState(false);
-  const { t } = useI18n();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || !isLoaded) return null;
-
-  if (user) {
-    return <AuraDashboardContent />;
-  }
-
-  return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-[#050505] text-white font-sans selection:bg-[#FF385C] selection:text-white relative overflow-hidden">
-      
-      {/* Left Column - Auth Form */}
-      <div className="flex flex-col justify-center px-8 lg:px-32 relative z-10 w-full max-w-2xl mx-auto h-full min-h-screen py-10 lg:py-0">
-        
-        {/* Logo & Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-10 w-full"
-        >
-          <div className="w-12 h-12 bg-[#FF385C] rounded-2xl flex items-center justify-center mb-10 shadow-[0_0_30px_rgba(255,56,92,0.2)]">
-            <span className="text-white font-black text-2xl font-institutional mt-1">A</span>
-          </div>
-          <h1 className="text-5xl font-black tracking-tighter text-white mb-2 font-institutional leading-none">
-            {t("auth.welcome")} <span className="text-[#FF385C]">{t("auth.back")}</span>
-          </h1>
-          <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] font-institutional">
-            {t("auth.subtitle")}
-          </p>
-        </motion.div>
-
-        {/* Clerk Sign In */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="w-full"
-        >
-          <SignIn 
-            routing="hash" 
-            appearance={{
-              layout: {
-                socialButtonsPlacement: "bottom",
-                socialButtonsVariant: "blockButton",
-              },
-              elements: {
-                card: "bg-transparent shadow-none border-none p-0 w-full max-w-full",
-                header: "hidden", // Hide completely to use our custom header
-                headerTitle: "hidden",
-                headerSubtitle: "hidden",
-                footer: "hidden", // Hide to keep it clean
-                formFieldLabel__emailAddress: "text-[#FF385C] font-black uppercase tracking-[0.2em] text-[9px] font-institutional mb-2 block",
-                formFieldLabel__password: "text-[#FF385C] font-black uppercase tracking-[0.2em] text-[9px] font-institutional mb-2 block",
-                formFieldInput: "bg-[#0A0A0A] border border-zinc-900 rounded-2xl text-white px-4 py-4 focus:border-[#FF385C] focus:ring-0 transition-all font-mono text-sm w-full",
-                formButtonPrimary: "bg-zinc-800 hover:bg-zinc-700 text-white font-black uppercase tracking-[0.3em] font-institutional text-[10px] py-5 rounded-2xl mt-4 w-full transition-all border border-zinc-700 hover:border-zinc-500",
-                identityPreviewText: "text-zinc-400 font-mono text-sm",
-                identityPreviewEditButton: "text-[#FF385C] hover:text-[#FF385C]/80",
-                dividerRow: "my-8",
-                dividerLine: "bg-zinc-900",
-                dividerText: "text-zinc-600 font-institutional text-[8px] font-black uppercase tracking-[0.3em]",
-                socialButtonsBlockButton: "bg-[#0A0A0A] border border-zinc-900 text-white hover:bg-zinc-900 transition-all py-4 rounded-xl",
-                socialButtonsBlockButtonText: "font-institutional text-[10px] font-black uppercase tracking-[0.2em]",
-                formFieldRow: "mb-6",
-                formFieldAction: "text-[#FF385C] hover:opacity-80 transition-opacity font-black uppercase tracking-[0.1em] text-[9px] font-institutional",
-              }
-            }}
-          />
-        </motion.div>
-
-        <motion.div
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           transition={{ delay: 0.5 }}
-           className="mt-12 text-center"
-        >
-          <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] font-institutional">
-            {t("auth.newToAura")} <a href="#" className="text-[#FF385C] hover:underline">{t("auth.createAccount")}</a>
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Right Column - Dashboard Mockup Abstraction */}
-      <div className="hidden lg:flex items-center justify-center p-12 relative h-full">
-        {/* Subtle radial gradient background */}
-        <div className="absolute inset-0 bg-[#0A0A0A] border-l border-white/5" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FF385C]/5 blur-[120px] rounded-full pointer-events-none" />
-        
-        {/* Mockup Container */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="relative w-full max-w-2xl aspect-16/10 bg-[#0A0A0A] rounded-4xl border border-zinc-900 shadow-2xl p-6 flex flex-col z-10 opacity-60"
-        >
-          {/* Mockup Header */}
-          <div className="flex justify-between items-center border-b border-zinc-900 pb-4 mb-6">
-             <div className="flex items-center space-x-4">
-                <div className="w-6 h-6 rounded-lg bg-[#FF385C] opacity-80" />
-                <div className="w-32 h-2 rounded-full bg-zinc-800" />
-             </div>
-             <div className="w-8 h-8 rounded-full bg-zinc-900" />
-          </div>
-
-          {/* Mockup Grid */}
-          <div className="flex gap-6 mb-6">
-             {/* Left Nav Mock */}
-             <div className="w-48 flex flex-col gap-4">
-                <div className="w-full h-12 bg-zinc-900/50 rounded-xl border border-zinc-900" />
-                <div className="w-full h-12 bg-zinc-900/30 rounded-xl border border-zinc-900/50" />
-             </div>
-
-             {/* Right Cards Mock */}
-             <div className="flex-1 grid grid-cols-3 gap-4">
-                <div className="h-24 bg-zinc-900/40 rounded-2xl border border-zinc-900/50 p-4 relative">
-                  <div className="w-16 h-2 rounded-full bg-zinc-800 absolute right-4 top-4" />
-                </div>
-                <div className="h-24 bg-zinc-900/40 rounded-2xl border border-zinc-900/50 p-4 relative">
-                  <div className="w-16 h-2 rounded-full bg-zinc-800 absolute right-4 top-4" />
-                </div>
-                <div className="h-24 bg-zinc-900/40 rounded-2xl border border-zinc-900/50 p-4 relative">
-                  <div className="w-16 h-2 rounded-full bg-zinc-800 absolute right-4 top-4" />
-                </div>
-             </div>
-          </div>
-
-          {/* Lower Section Mock */}
-          <div className="flex-1 border border-zinc-900/60 rounded-3xl bg-zinc-900/20 relative p-8">
-             <div className="w-32 h-3 rounded-full bg-zinc-800 mb-8" />
-             <div className="flex justify-center gap-4 absolute bottom-8 left-1/2 -translate-x-1/2">
-                {[1,2,3,4,5,6,7].map(i => (
-                  <div key={i} className="w-12 h-2 rounded-full bg-zinc-900" />
-                ))}
-             </div>
-          </div>
-        </motion.div>
-
-        {/* Version marker */}
-        <div className="absolute bottom-8 right-12 text-[8px] font-black uppercase tracking-[0.4em] text-zinc-600 font-institutional">
-           Authorized Personnel Only • v5.7
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function AuraPMS() {
   return (
     <AuraProvider>
-      <AuthGate />
+      <AuraDashboardContent />
     </AuraProvider>
   );
 }

@@ -189,6 +189,7 @@ export const en = {
   "set.saving": "Saving...",
   "set.apply": "Apply Settings",
   "set.saved": "Saved successfully!",
+  "common.saved": "SAVED",
   "set.purgeConfirmAll": "Are you sure you want to purge ALL data (Reservations and Logs)? This action cannot be undone.",
   "set.purgeConfirmRes": "Confirm you want to delete all Guests/Reservations?",
   "set.purgeConfirmLogs": "Confirm you want to delete all Audit Logs?",

@@ -21,28 +21,71 @@ export function RoomGrid() {
 
   const canManage = role === "ADMIN" || role === "GERENTE";
 
+  // Animation variants for staggered entrance
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20, scale: 0.95 },
+    show: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1, 
+      transition: { 
+        type: "spring" as const, 
+        stiffness: 300, 
+        damping: 24 
+      } 
+    }
+  };
+
   return (
     <div className="space-y-6">
       <AddRoomModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      >
       <AnimatePresence mode="popLayout">
         {rooms.map((room) => {
           const config = statusConfig[room.status];
+          const colorClass = config.color.split(' ')[0]; // e.g. text-emerald-400
+          
           return (
             <motion.div
               key={room.id}
               layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              whileHover={{ y: -5 }}
+              variants={itemVariants}
+              initial="hidden"
+              animate="show"
+              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+              whileHover={{ 
+                y: -8, 
+                transition: { type: "spring" as const, stiffness: 400, damping: 10 } 
+              }}
               onClick={() => toggleRoomStatus(room.id)}
-              className="glass p-6 rounded-[2.5rem] cursor-pointer group transition-all duration-500 border-white/5 bg-white/1 hover:border-primary/20 relative"
+              className="glass p-6 rounded-[2.5rem] cursor-pointer group transition-all duration-500 border-white/5 bg-white/1 hover:border-primary/20 relative overflow-hidden active:scale-95"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className={`p-4 rounded-2xl ${config.color} border border-white/5`}>
+              {/* Dynamic Glow Background */}
+              <div className={`absolute -inset-2 opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-500 rounded-full ${config.color.split(' ')[1]}`} />
+              
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div className={`p-4 rounded-2xl ${config.color} border border-white/5 relative`}>
                   <config.icon size={24} />
+                  {/* Pulsing Status Dot */}
+                  <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${config.color.split(' ')[1]} border-2 border-[#121212] flex items-center justify-center overflow-hidden`}>
+                    <div className={`w-full h-full rounded-full ${colorClass.replace('text-', 'bg-')} animate-pulse`} />
+                  </div>
                 </div>
                  <div className="text-right">
                   <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] block mb-1 font-institutional">{t("room.unit")}</span>
@@ -50,16 +93,17 @@ export function RoomGrid() {
                 </div>
               </div>
               
-              <div className="space-y-1">
-                <div className="text-sm font-medium text-foreground">{room.type}</div>
-                <div className={`text-[10px] font-bold px-2.5 py-1 rounded-full inline-block border ${config.color.split(' ')[1]} ${config.color.split(' ')[0]}`}>
-                  {room.status.toUpperCase()}
+              <div className="space-y-1 relative z-10">
+                <div className="text-sm font-black text-white/90 uppercase tracking-wide">{room.type}</div>
+                <div className={`text-[9px] font-black px-3 py-1 rounded-full inline-flex items-center space-x-1.5 border ${config.color.split(' ')[1]} ${colorClass} uppercase tracking-widest`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${colorClass.replace('text-', 'bg-')}`} />
+                  <span>{room.status}</span>
                 </div>
               </div>
 
-               <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+               <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center text-[10px] text-zinc-500 font-bold uppercase tracking-wider relative z-10">
                 <span>{t("room.lastClean")}</span>
-                <span className="text-white font-black">{t("room.cleanTime")}</span>
+                <span className="text-white font-black drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{t("room.cleanTime")}</span>
               </div>
 
               {/* Delete Button - Overlay on Hover */}
@@ -69,7 +113,7 @@ export function RoomGrid() {
                     e.stopPropagation();
                     deleteRoom(room.id);
                   }}
-                  className="absolute top-4 right-4 p-2 bg-red-500/20 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
+                  className="absolute top-4 right-4 p-2 bg-red-500/10 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white z-20"
                   title="Eliminar habitación"
                 >
                   <Trash2 size={16} />
@@ -83,22 +127,28 @@ export function RoomGrid() {
         {canManage && (
           <motion.div
             layout
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            variants={itemVariants}
+            whileHover={{ scale: 1.02, y: -4 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setIsModalOpen(true)}
-            className="p-6 rounded-[40px] border-2 border-dashed border-border flex flex-col items-center justify-center text-center space-y-4 hover:border-primary/50 cursor-pointer group transition-all min-h-[220px]"
+            className="p-1 rounded-[45px] relative group cursor-pointer"
           >
-            <div className="w-16 h-16 bg-muted group-hover:bg-primary/20 rounded-3xl flex items-center justify-center transition-colors">
-              <Plus className="text-muted group-hover:text-primary transition-colors" size={32} />
-            </div>
-            <div>
-              <h4 className="font-black text-white font-institutional uppercase tracking-tight">{t("room.new")}</h4>
-              <p className="text-[10px] text-zinc-600 font-black uppercase tracking-widest mt-1 font-institutional">{t("room.manual")}</p>
+            {/* Animated Glow Border */}
+            <div className="absolute inset-0 bg-linear-to-r from-primary/20 via-primary/5 to-primary/20 rounded-[45px] opacity-50 group-hover:opacity-100 transition-opacity blur-[1px] -z-10" />
+            
+            <div className="h-full w-full bg-[#121212]/90 backdrop-blur-xl border border-white/5 rounded-[40px] p-6 flex flex-col items-center justify-center text-center space-y-4 min-h-[220px]">
+              <div className="w-16 h-16 bg-white/5 border border-white/5 group-hover:border-primary/30 group-hover:bg-primary/10 rounded-3xl flex items-center justify-center transition-all duration-500 shadow-xl">
+                <Plus className="text-zinc-600 group-hover:text-primary transition-colors group-hover:scale-110 duration-500" size={32} />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-black text-white font-institutional uppercase tracking-tighter text-lg">{t("room.new")}</h4>
+                <p className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.2em] font-institutional">{t("room.manual")}</p>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-      </div>
+      </motion.div>
     </div>
   );
 }

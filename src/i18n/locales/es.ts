@@ -189,6 +189,7 @@ export const es = {
   "set.saving": "Guardando...",
   "set.apply": "Aplicar Configuración",
   "set.saved": "¡Guardado exitosamente!",
+  "common.saved": "GUARDADO",
   "set.purgeConfirmAll": "¿Estás seguro de que deseas purgar TODOS los datos (Reservas y Logs)? Esta acción no se puede deshacer.",
   "set.purgeConfirmRes": "¿Confirmas que deseas eliminar todos los Huéspedes/Reservas?",
   "set.purgeConfirmLogs": "¿Confirmas que deseas eliminar todos los Logs de Auditoría?",
