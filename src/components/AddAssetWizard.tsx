@@ -39,7 +39,7 @@ export function AddAssetWizard({ isOpen, onClose }: { isOpen: boolean; onClose: 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-6xl h-[85vh] bg-[#0A0A0A] rounded-[2rem] border border-white/10 shadow-2xl flex relative overflow-hidden"
+        className="w-full max-w-6xl h-[85vh] bg-[#0A0A0A] rounded-4xl border border-white/10 shadow-2xl flex relative overflow-hidden"
       >
         {/* Close Button */}
         <button 

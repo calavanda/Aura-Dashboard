@@ -8,7 +8,8 @@ import {
   createHotelWithRooms,
   getHotelData,
   checkOrCreateUserAction,
-  purgeHotelDataAction
+  purgeHotelDataAction,
+  updateHotelAction
 } from "@/app/actions/aura";
 
 export type RoomStatus = "Sucia" | "Limpia" | "Ocupada" | "Mantenimiento";
@@ -39,6 +40,7 @@ export interface HotelConfig {
   type: string; // Hotel, Hostal, Vivienda, etc.
   roomsCount: number;
   services: string[]; // Restaurant, Pool, etc.
+  logoUrl?: string;
 }
 
 // Assuming 'Role' is a type that needs to be defined or imported if it's not a literal string.
@@ -60,6 +62,7 @@ interface AuraContextType {
   isOwner: boolean;
   logs: any[];
   refreshData: () => Promise<void>;
+  updateHotel: (data: { name?: string, type?: string, logoUrl?: string }) => Promise<{ success: boolean, error?: string }>;
   addRoom: (room: { number: string, type: string }) => Promise<{ success: boolean, error?: string }>;
   applyMasterKey: (key: string) => Promise<{ success: boolean, error?: string }>;
   updateRoom: (id: string, room: Partial<Room>) => void;
@@ -102,7 +105,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
             name: result.hotel.name,
             type: result.hotel.type,
             roomsCount: result.rooms?.length || 0,
-            services: [] 
+            services: [],
+            logoUrl: result.hotel.logoUrl || undefined
           });
           setRooms(result.rooms as any || []);
           setReservations(result.reservations as any || []);
@@ -138,6 +142,16 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
       return { success: true };
     }
     return { success: false, error: result.error };
+  };
+
+  const updateHotel = async (data: { name?: string, type?: string, logoUrl?: string }) => {
+    if (!hotelId) return { success: false, error: "No hotel ID" };
+    const res = await updateHotelAction(hotelId, data);
+    if (res.success && res.hotel) {
+      setHotelConfig(prev => prev ? { ...prev, ...data } : null);
+      return { success: true };
+    }
+    return res;
   };
 
   const applyMasterKey = async (key: string) => {
@@ -249,6 +263,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
       isOwner,
       logs,
       refreshData,
+      updateHotel,
       addRoom,
       applyMasterKey,
       updateRoom,

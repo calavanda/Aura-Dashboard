@@ -122,7 +122,7 @@ export function PropertyModule() {
                   </div>
 
                   {/* Absolute Zero Base Graph Representation */}
-                  <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/10" />
+                  <div className="absolute top-1/2 left-0 w-full h-px bg-white/10" />
                   <svg className="w-full h-[60%] md:h-48 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] mt-8" preserveAspectRatio="none" viewBox="0 0 100 100">
                     <path d="M0,95 L100,95" fill="none" stroke="#3B82F6" strokeWidth="1" />
                     <path d="M0,97 L100,97" fill="none" stroke="#FF385C" strokeWidth="0.5" strokeDasharray="2,2" />
@@ -278,7 +278,7 @@ function CalendarSubView({ t }: { t: any }) {
       </div>
 
       {viewMode === "MONTH" ? (
-        <div className="glass rounded-[2rem] border-white/5 overflow-hidden">
+        <div className="glass rounded-4xl border-white/5 overflow-hidden">
           <div className="grid grid-cols-7 border-b border-white/5 bg-white/2">
             {daysOfWeek.map(d => (
               <div key={d} className="py-4 text-center text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 border-r border-white/5 last:border-r-0">
@@ -329,21 +329,21 @@ function BookingsSubView({ t }: { t: any }) {
       {/* Header Metrics */}
       <div className="flex flex-col md:flex-row gap-6">
         <div className="w-full md:w-3/4 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass p-6 rounded-[2rem] border-white/5 bg-[#080808]">
+          <div className="glass p-6 rounded-4xl border-white/5 bg-[#080808]">
              <div className="flex items-center space-x-2 mb-4">
                 <CalendarCheck size={14} className="text-[#3B82F6]" />
                 <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t("prop.book.active")}</span>
              </div>
              <p className="text-3xl font-black text-white tracking-tighter">0</p>
           </div>
-          <div className="glass p-6 rounded-[2rem] border-white/5 bg-[#080808]">
+          <div className="glass p-6 rounded-4xl border-white/5 bg-[#080808]">
              <div className="flex items-center space-x-2 mb-4">
                 <Users size={14} className="text-[#10b981]" />
                 <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t("prop.book.arriving")}</span>
              </div>
              <p className="text-3xl font-black text-white tracking-tighter">0</p>
           </div>
-          <div className="glass p-6 rounded-[2rem] border-white/5 bg-[#080808]">
+          <div className="glass p-6 rounded-4xl border-white/5 bg-[#080808]">
              <div className="flex items-center space-x-2 mb-4">
                 <FileDown size={14} className="text-[#FF385C] rotate-90" />
                 <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t("prop.book.depart")}</span>
@@ -353,7 +353,7 @@ function BookingsSubView({ t }: { t: any }) {
         </div>
         
         {/* Date Strip */}
-        <div className="w-full md:w-1/4 glass p-4 rounded-[2rem] border-white/5 bg-[#0A0A0A] flex flex-col justify-between">
+        <div className="w-full md:w-1/4 glass p-4 rounded-4xl border-white/5 bg-[#0A0A0A] flex flex-col justify-between">
           <p className="text-[8px] font-black uppercase tracking-[0.2em] text-zinc-600 text-center mb-2">{t("prop.book.glance")}</p>
           <div className="flex justify-between items-center px-2">
             <ChevronLeft size={16} className="text-zinc-600" />
@@ -372,7 +372,7 @@ function BookingsSubView({ t }: { t: any }) {
       <div className="flex flex-col xl:flex-row gap-6">
         
         {/* Awaiting Payment Table */}
-        <div className="w-full xl:w-3/4 glass rounded-[2rem] border-white/5 p-6 flex flex-col min-h-[500px]">
+        <div className="w-full xl:w-3/4 glass rounded-4xl border-white/5 p-6 flex flex-col min-h-[500px]">
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center space-x-3">
               <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 font-institutional">{t("prop.book.awaiting")}</h5>
@@ -417,7 +417,7 @@ function BookingsSubView({ t }: { t: any }) {
         </div>
 
         {/* Right Ledger Panel */}
-        <div className="w-full xl:w-1/4 glass rounded-[2rem] border border-zinc-900 p-6 flex flex-col justify-between">
+        <div className="w-full xl:w-1/4 glass rounded-4xl border border-zinc-900 p-6 flex flex-col justify-between">
            <div>
              <div className="flex justify-between items-center mb-6">
                <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">{t("prop.book.process")}</h5>
@@ -454,21 +454,21 @@ function ListingsSubView({ onOpenWizard }: { onOpenWizard: () => void }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-6">
-        <div className="w-full md:w-1/2 glass p-6 rounded-[2rem] border-white/5 bg-[#080808] flex justify-between items-center">
+        <div className="w-full md:w-1/2 glass p-6 rounded-4xl border-white/5 bg-[#080808] flex justify-between items-center">
            <div>
              <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">TOTAL REVENUE</span>
              <p className="text-4xl font-black text-[#10b981] tracking-tighter">$72,400</p>
            </div>
            <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[8px] font-bold">+12%</span>
         </div>
-        <div className="w-full md:w-1/4 glass p-6 rounded-[2rem] border-white/5 bg-[#080808] flex justify-between items-center">
+        <div className="w-full md:w-1/4 glass p-6 rounded-4xl border-white/5 bg-[#080808] flex justify-between items-center">
            <div>
              <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">OCCUPANCY</span>
              <p className="text-4xl font-black text-[#3B82F6] tracking-tighter">84%</p>
            </div>
            <span className="bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20 px-2 py-0.5 rounded-full text-[8px] font-bold">+3%</span>
         </div>
-        <div className="w-full md:w-1/4 glass p-6 rounded-[2rem] border-white/5 bg-[#080808] flex justify-between items-start">
+        <div className="w-full md:w-1/4 glass p-6 rounded-4xl border-white/5 bg-[#080808] flex justify-between items-start">
            <div>
              <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">ACTIVE ASSETS</span>
              <p className="text-4xl font-black text-[#FF385C] tracking-tighter">0</p>
@@ -477,7 +477,7 @@ function ListingsSubView({ onOpenWizard }: { onOpenWizard: () => void }) {
         </div>
       </div>
 
-      <div className="glass rounded-[2rem] border-white/5 p-6 min-h-[500px] flex flex-col">
+      <div className="glass rounded-4xl border-white/5 p-6 min-h-[500px] flex flex-col">
         <div className="flex justify-between items-center mb-8">
           <div className="relative w-1/3">
              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">

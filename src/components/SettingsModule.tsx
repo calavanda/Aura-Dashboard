@@ -25,7 +25,7 @@ import { useAura } from "@/context/AuraContext";
 import { generateConnectionCodeAction } from "@/app/actions/aura";
 
 export function SettingsModule() {
-  const { hotelConfig, hotelId, subscription, connectionCode, refreshData, applyMasterKey, purgeData } = useAura();
+  const { hotelConfig, hotelId, subscription, connectionCode, refreshData, applyMasterKey, purgeData, updateHotel } = useAura();
   const [saving, setSaving] = useState(false);
   const [purging, setPurging] = useState<string | null>(null);
   const [generatingCode, setGeneratingCode] = useState(false);
@@ -35,14 +35,50 @@ export function SettingsModule() {
   const [formData, setFormData] = useState({
     name: hotelConfig?.name || "",
     type: hotelConfig?.type || "Hotel",
-    notifications: true,
-    publicWeb: true
+    logoUrl: hotelConfig?.logoUrl || "",
+    notifications: typeof window !== "undefined" ? localStorage.getItem("aura_prefs_notif") !== "false" : true,
+    publicWeb: typeof window !== "undefined" ? localStorage.getItem("aura_prefs_sync") !== "false" : true
   });
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise(r => setTimeout(r, 1000));
+    const res = await updateHotel({ name: formData.name, type: formData.type, logoUrl: formData.logoUrl });
+    if (res.success) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("aura_prefs_notif", formData.notifications.toString());
+        localStorage.setItem("aura_prefs_sync", formData.publicWeb.toString());
+      }
+      
+      const btn = document.getElementById("save-config-btn");
+      if (btn) {
+         const oldText = btn.innerText;
+         btn.innerText = "¡Guardado exitosamente!";
+         btn.classList.add("bg-emerald-500", "text-white");
+         setTimeout(() => {
+            btn.innerText = oldText;
+            btn.classList.remove("bg-emerald-500", "text-white");
+         }, 3000);
+      }
+      await refreshData();
+    } else {
+      alert("Error al guardar: " + res.error);
+    }
     setSaving(false);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("La imagen no debe superar los 2MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, logoUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleGenerateCode = async () => {
@@ -99,12 +135,17 @@ export function SettingsModule() {
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 bg-accent rounded-3xl flex items-center justify-center text-muted relative group overflow-hidden">
-                    <Camera size={24} className="group-hover:scale-110 transition-transform" />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <label className="w-20 h-20 bg-accent rounded-3xl flex items-center justify-center text-muted relative group overflow-hidden cursor-pointer border border-border">
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    {formData.logoUrl ? (
+                       <img src={formData.logoUrl} alt="Hotel Logo" className="w-full h-full object-cover" />
+                    ) : (
+                       <Camera size={24} className="group-hover:scale-110 transition-transform" />
+                    )}
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <span className="text-[10px] font-bold text-white uppercase">Cambiar</span>
                     </div>
-                  </div>
+                  </label>
                   <div className="flex-1">
                     <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">Nombre Comercial</label>
                     <input 
@@ -310,6 +351,7 @@ export function SettingsModule() {
 
           <div className="flex p-4">
             <button 
+              id="save-config-btn"
               onClick={handleSave}
               disabled={saving}
               className="w-full py-4 bg-foreground text-background font-bold rounded-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"

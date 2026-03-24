@@ -32,6 +32,24 @@ export async function createHotelWithRooms(config: HotelConfig, clerkId: string)
   }
 }
 
+export async function updateHotelAction(hotelId: string, data: { name?: string, type?: string, logoUrl?: string }) {
+  try {
+    const hotel = await prisma.hotel.update({
+      where: { id: hotelId },
+      data: {
+        ...(data.name && { name: data.name }),
+        ...(data.type && { type: data.type }),
+        ...(data.logoUrl && { logoUrl: data.logoUrl }),
+      }
+    });
+    revalidatePath("/");
+    return { success: true, hotel };
+  } catch (error) {
+    console.error("Error updating hotel:", error);
+    return { success: false, error: "Failed to update hotel" };
+  }
+}
+
 export async function addRoomAction(hotelId: string, roomNumber: string, roomType: string, clerkId?: string) {
   try {
     const hotel = await prisma.hotel.findUnique({
