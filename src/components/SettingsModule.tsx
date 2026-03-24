@@ -16,14 +16,18 @@ import {
   ShieldCheck,
   Zap,
   Ticket,
-  Sparkles
+  Sparkles,
+  Trash2,
+  Eraser,
+  AlertTriangle
 } from "lucide-react";
 import { useAura } from "@/context/AuraContext";
 import { generateConnectionCodeAction } from "@/app/actions/aura";
 
 export function SettingsModule() {
-  const { hotelConfig, hotelId, subscription, connectionCode, refreshData, applyMasterKey } = useAura();
+  const { hotelConfig, hotelId, subscription, connectionCode, refreshData, applyMasterKey, purgeData } = useAura();
   const [saving, setSaving] = useState(false);
+  const [purging, setPurging] = useState<string | null>(null);
   const [generatingCode, setGeneratingCode] = useState(false);
   const [masterKey, setMasterKey] = useState("");
   const [masterStatus, setMasterStatus] = useState<{ success?: boolean, error?: string }>({});
@@ -37,7 +41,6 @@ export function SettingsModule() {
 
   const handleSave = async () => {
     setSaving(true);
-    // Simulate server action
     await new Promise(r => setTimeout(r, 1000));
     setSaving(false);
   };
@@ -54,9 +57,26 @@ export function SettingsModule() {
     const res = await applyMasterKey(masterKey);
     setMasterStatus(res);
     if (res.success) {
-        setMasterKey("");
-        setTimeout(() => setMasterStatus({}), 3000);
+      setMasterKey("");
+      setTimeout(() => setMasterStatus({}), 3000);
     }
+  };
+
+  const handlePurge = async (type: "RESERVATIONS" | "LOGS" | "ALL") => {
+    const confirmMsg = type === "ALL" 
+        ? "¿Estás seguro de que deseas purgar TODOS los datos (Reservas y Logs)? Esta acción no se puede deshacer."
+        : `¿Confirmas que deseas eliminar todos los ${type === "RESERVATIONS" ? 'Huéspedes/Reservas' : 'Logs de Auditoría'}?`;
+    
+    if (!window.confirm(confirmMsg)) return;
+    
+    setPurging(type);
+    const res = await purgeData(type);
+    if (res.success) {
+        alert("Limpieza completada exitosamente.");
+    } else {
+        alert(`Error: ${res.error}`);
+    }
+    setPurging(null);
   };
 
   return (
@@ -200,35 +220,91 @@ export function SettingsModule() {
           </div>
 
           <div className="glass p-8 rounded-[40px] space-y-4">
-             <div className="flex items-center gap-3 text-amber-500 mb-2">
-               <Lock size={18} />
-               <h5 className="text-[10px] font-bold uppercase tracking-widest">Seguridad y Licencia</h5>
+             <div className="flex items-center justify-between gap-3 text-amber-500 mb-4">
+               <div className="flex items-center gap-3">
+                 <Lock size={18} />
+                 <h5 className="text-[10px] font-black uppercase tracking-[0.3em] font-institutional">Seguridad y Licencia</h5>
+               </div>
+               <span className="text-[9px] bg-amber-500/10 px-2 py-1 rounded-full font-bold uppercase tracking-widest border border-amber-500/20">OWASP Protected</span>
              </div>
              
              <div className="space-y-4">
                 <p className="text-[10px] text-muted uppercase tracking-widest font-bold">Activar Aura Master Key</p>
-                <div className="flex gap-2">
+                 <div className="relative group">
                     <input 
                         type="password" 
-                        placeholder="••••••••••••"
+                        placeholder="•••• •••• •••• ••••"
                         value={masterKey}
                         onChange={(e) => setMasterKey(e.target.value)}
-                        className="flex-1 bg-white/5 border border-border/50 rounded-xl px-4 py-2 text-xs outline-none focus:ring-1 focus:ring-primary/30"
+                        className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-sm outline-none focus:ring-2 focus:ring-amber-500/20 font-mono transition-all pr-24"
                     />
                     <button 
                         onClick={handleApplyMasterKey}
-                        className="bg-foreground text-background px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all"
+                        className="absolute right-2 top-2 bottom-2 bg-amber-500 text-black px-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-400 active:scale-95 transition-all shadow-lg shadow-amber-900/40"
                     >
-                        Aplicar
+                        Validar
                     </button>
                 </div>
-                {masterStatus.error && <p className="text-[9px] text-rose-500 font-bold">{masterStatus.error}</p>}
-                {masterStatus.success && <p className="text-[9px] text-emerald-500 font-bold">¡Dashboard Desbloqueado Exitosamente!</p>}
+                {masterStatus.error && <p className="text-[9px] text-rose-500 font-black uppercase tracking-widest text-center mt-2">{masterStatus.error}</p>}
+                {masterStatus.success && <p className="text-[9px] text-emerald-500 font-black uppercase tracking-widest text-center mt-2">¡Dashboard Desbloqueado!</p>}
              </div>
 
-             <div className="pt-4 border-t border-border/20">
-                <p className="text-[10px] text-muted">ID del Hotel: <span className="font-mono">{hotelId}</span></p>
-                <button className="text-[10px] font-bold text-primary hover:underline uppercase tracking-widest mt-2">Restablecer API Secret</button>
+             <div className="pt-4 border-t border-white/5">
+                <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-black font-institutional mb-2">Metadata del Sistema</p>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-zinc-600">ID Hotel</span>
+                  <span className="font-mono text-zinc-400">{hotelId}</span>
+                </div>
+                <button className="w-full mt-4 py-3 bg-white/5 text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-white/10 hover:text-white transition-all border border-white/5">
+                   Restablecer secretos de API
+                </button>
+             </div>
+          </div>
+
+          <div className="glass p-8 rounded-[40px] border-rose-500/20 bg-rose-500/5 space-y-6">
+             <div className="flex items-center gap-3 text-rose-500 mb-2">
+               <AlertTriangle size={18} />
+               <h5 className="text-[10px] font-black uppercase tracking-[0.3em] font-institutional">Zona de Peligro</h5>
+             </div>
+             
+             <div className="space-y-4">
+                <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">
+                  Utiliza estas herramientas para limpiar datos de prueba o errores. Estas acciones son irreversibles.
+                </p>
+                
+                <div className="grid grid-cols-1 gap-3">
+                    <button 
+                        onClick={() => handlePurge("RESERVATIONS")}
+                        disabled={purging !== null}
+                        className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all group"
+                    >
+                        <div className="flex items-center gap-3">
+                            <Eraser size={16} className="text-zinc-600 group-hover:text-rose-500" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-white font-institutional">Purgar Reservas</span>
+                        </div>
+                        {purging === "RESERVATIONS" && <RefreshCcw className="animate-spin text-rose-500" size={14} />}
+                    </button>
+
+                    <button 
+                        onClick={() => handlePurge("LOGS")}
+                        disabled={purging !== null}
+                        className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-rose-500/10 hover:border-rose-500/20 transition-all group"
+                    >
+                        <div className="flex items-center gap-3">
+                            <Trash2 size={16} className="text-zinc-600 group-hover:text-rose-500" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-white font-institutional">Limpiar Historial Logs</span>
+                        </div>
+                        {purging === "LOGS" && <RefreshCcw className="animate-spin text-rose-500" size={14} />}
+                    </button>
+                    
+                    <button 
+                        onClick={() => handlePurge("ALL")}
+                        disabled={purging !== null}
+                        className="w-full flex items-center justify-center p-4 rounded-2xl bg-rose-600 text-white font-black text-[9px] uppercase tracking-[0.3em] font-institutional hover:bg-rose-700 active:scale-95 transition-all shadow-xl shadow-rose-900/20"
+                    >
+                        {purging === "ALL" ? "Procesando Purga..." : "Purgar Todo el Sistema"}
+                    </button>
+                </div>
              </div>
           </div>
 
@@ -269,5 +345,3 @@ function ToggleRow({ icon: Icon, title, desc, active, onToggle }: { icon: any, t
     </div>
   );
 }
-
-export default SettingsModule;

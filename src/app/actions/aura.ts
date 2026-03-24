@@ -158,6 +158,37 @@ export async function createAuditLog(clerkId: string, action: string, details?: 
   }
 }
 
+export async function purgeHotelDataAction(hotelId: string, type: "RESERVATIONS" | "LOGS" | "ALL") {
+  try {
+    if (type === "RESERVATIONS" || type === "ALL") {
+      await prisma.reservation.deleteMany({
+        where: { hotelId: hotelId }
+      });
+    }
+
+    if (type === "LOGS" || type === "ALL") {
+      // Find all users of this hotel to delete their logs
+      const hotel = await prisma.hotel.findUnique({
+        where: { id: hotelId },
+        include: { users: true }
+      });
+      
+      if (hotel) {
+        const userIds = hotel.users.map(u => u.id);
+        await prisma.auditLog.deleteMany({
+          where: { userId: { in: userIds } }
+        });
+      }
+    }
+
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Error purging hotel data:", error);
+    return { success: false, error: "Failed to purge data" };
+  }
+}
+
 export async function checkOrCreateUserAction(clerkId: string, email: string) {
   try {
     const user = await prisma.user.upsert({

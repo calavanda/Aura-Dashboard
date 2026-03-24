@@ -15,12 +15,15 @@ export function ReservationList() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h3 className="text-xl font-bold font-outfit text-foreground">Agenda de Reservaciones</h3>
+    <div className="space-y-12">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-6 px-2">
+        <div>
+          <h3 className="text-4xl font-black tracking-tighter text-white">Guest Index</h3>
+          <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.4em] font-institutional mt-3">Active Pipeline Monitoring</p>
+        </div>
         <div className="flex items-center space-x-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
+          <div className="relative flex-1 md:w-80">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
             <input 
               type="text" 
               placeholder="Buscar por nombre o habitación..." 
@@ -35,17 +38,17 @@ export function ReservationList() {
         </div>
       </div>
 
-      <div className="glass rounded-3xl overflow-hidden">
+      <div className="glass rounded-[2.5rem] overflow-hidden border-white/5 bg-white/1">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-border bg-accent/50 text-muted font-bold uppercase text-[10px] tracking-widest">
-                <th className="px-8 py-5">Huésped</th>
-                <th className="px-8 py-5">Habitación</th>
-                <th className="px-8 py-5">Estado</th>
-                <th className="px-8 py-5">Pago</th>
-                <th className="px-8 py-5 text-right">Monto</th>
-                <th className="px-8 py-5 text-right">Acciones</th>
+              <tr className="border-b border-white/5 bg-white/2 text-zinc-600 font-black uppercase text-[9px] tracking-[0.3em] font-institutional">
+                <th className="px-10 py-8">Patron</th>
+                <th className="px-10 py-8">Asset</th>
+                <th className="px-10 py-8">Status</th>
+                <th className="px-10 py-8">Payment</th>
+                <th className="px-10 py-8 text-right">Volume</th>
+                <th className="px-10 py-8 text-right">Scope</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

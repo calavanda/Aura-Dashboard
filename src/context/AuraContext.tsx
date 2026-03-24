@@ -7,7 +7,8 @@ import {
   deleteRoomAction, 
   createHotelWithRooms,
   getHotelData,
-  checkOrCreateUserAction
+  checkOrCreateUserAction,
+  purgeHotelDataAction
 } from "@/app/actions/aura";
 
 export type RoomStatus = "Sucia" | "Limpia" | "Ocupada" | "Mantenimiento";
@@ -67,6 +68,7 @@ interface AuraContextType {
   toggleRoomStatus: (id: string) => void;
   addReservation: (res: Omit<Reservation, "id">) => void;
   completeSetup: (config: HotelConfig) => Promise<void>;
+  purgeData: (type: "RESERVATIONS" | "LOGS" | "ALL") => Promise<{ success: boolean, error?: string }>;
 }
 
 const AuraContext = createContext<AuraContextType | undefined>(undefined);
@@ -181,6 +183,17 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     setReservations(prev => [...prev, { ...res, id: Math.random().toString(36).substr(2, 9) }]);
   };
 
+  const purgeData = async (type: "RESERVATIONS" | "LOGS" | "ALL") => {
+    if (!hotelId) return { success: false, error: "No hotel identified" };
+    const result = await purgeHotelDataAction(hotelId, type);
+    if (result.success) {
+      if (type === "RESERVATIONS" || type === "ALL") setReservations([]);
+      if (type === "LOGS" || type === "ALL") setLogs([]);
+      return { success: true };
+    }
+    return { success: false, error: result.error };
+  };
+
   const completeSetup = async (config: HotelConfig) => {
     if (!user) return;
     const result = await createHotelWithRooms(config, user.id);
@@ -243,7 +256,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
       clearRooms,
       toggleRoomStatus, 
       addReservation, 
-      completeSetup 
+      completeSetup,
+      purgeData
     }}>
       {children}
     </AuraContext.Provider>

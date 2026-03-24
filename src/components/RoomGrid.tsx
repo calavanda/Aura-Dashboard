@@ -7,10 +7,10 @@ import { Bed, CheckCircle2, AlertCircle, Clock, Hammer, Trash2, Plus } from "luc
 import { AddRoomModal } from "./Onboarding/AddRoomModal";
 
 const statusConfig: Record<RoomStatus, { color: string, icon: any }> = {
-  "Limpia": { color: "text-emerald-500 bg-emerald-500/10", icon: CheckCircle2 },
-  "Sucia": { color: "text-amber-500 bg-amber-500/10", icon: Clock },
-  "Ocupada": { color: "text-blue-500 bg-blue-500/10", icon: Bed },
-  "Mantenimiento": { color: "text-red-500 bg-red-500/10", icon: Hammer },
+  "Limpia": { color: "text-emerald-400 bg-emerald-500/10", icon: CheckCircle2 },
+  "Sucia": { color: "text-amber-400 bg-amber-500/10", icon: Clock },
+  "Ocupada": { color: "text-blue-400 bg-blue-500/10", icon: Bed },
+  "Mantenimiento": { color: "text-rose-400 bg-red-500/10", icon: Hammer },
 };
 
 export function RoomGrid() {
@@ -36,15 +36,15 @@ export function RoomGrid() {
               exit={{ opacity: 0, scale: 0.9 }}
               whileHover={{ y: -5 }}
               onClick={() => toggleRoomStatus(room.id)}
-              className="glass p-6 rounded-3xl cursor-pointer group transition-all"
+              className="glass p-6 rounded-[2.5rem] cursor-pointer group transition-all duration-500 border-white/5 bg-white/1 hover:border-[#FF385C]/20"
             >
               <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-2xl ${config.color}`}>
+                <div className={`p-4 rounded-2xl ${config.color} border border-white/5`}>
                   <config.icon size={24} />
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Habitación</span>
-                  <span className="text-2xl font-bold font-outfit text-foreground group-hover:text-primary transition-colors">#{room.number}</span>
+                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] block mb-1 font-institutional">Housing Unit</span>
+                  <span className="text-2xl font-black text-white group-hover:text-[#FF385C] transition-colors leading-none tracking-tighter">#{room.number}</span>
                 </div>
               </div>
               
