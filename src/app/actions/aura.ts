@@ -163,6 +163,19 @@ export async function createAuditLog(clerkId: string, action: string, details?: 
     const user = await prisma.user.findUnique({ where: { clerkId } });
     if (!user) return { success: false };
 
+    // Anti-duplication: check if same action in last 5 seconds
+    const fiveSecondsAgo = new Date(Date.now() - 5000);
+    const recentLog = await prisma.auditLog.findFirst({
+      where: {
+        userId: user.id,
+        action,
+        details: details || null,
+        timestamp: { gte: fiveSecondsAgo }
+      }
+    });
+
+    if (recentLog) return { success: true }; // Skip duplicate
+
     await prisma.auditLog.create({
       data: {
         userId: user.id,

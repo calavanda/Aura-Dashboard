@@ -29,6 +29,8 @@ export const en = {
   "nav.logs": "Audit Logs",
   "nav.sandbox": "Sandbox",
   "nav.settings": "Settings",
+  "nav.plans": "Plans",
+  "nav.advanced": "Advanced",
   "nav.logout": "Log Out",
 
   // Dashboard Stats
@@ -87,7 +89,7 @@ export const en = {
   "prop.trends.disclaimer": "Data reflects verified gross revenue and nightly averages. Historical adjustments may apply during end-of-quarter reconciliation.",
   "prop.trends.leg.rev": "MONTHLY REVENUE",
   "prop.trends.leg.adr": "AVERAGE DAILY RATE",
-  "prop.trends.growth": "+18.4% Growth vs Prev Year",
+  "prop.trends.growth": "Growth vs Prev Year",
   
   "prop.bottom.bookings": "MONTHLY BOOKINGS",
   "prop.bottom.forecast": "REVENUE FORECAST",
@@ -140,6 +142,10 @@ export const en = {
   "prop.list.filter": "FILTER",
   "prop.list.add": "ADD ASSET",
   "prop.list.empty": "No portfolio assets registered. Use 'Add Asset' to initialize management.",
+  
+  "adv.warning.title": "RESTRICTED ACCESS",
+  "adv.warning.desc": "This section contains critical tools that can permanently delete data. By proceeding, you confirm that you are fully aware that any data purge is irreversible.",
+  "adv.warning.proceed": "I UNDERSTAND THE RISKS, PROCEED",
 
   // Empty State Awaiting Data
   "empty.title": "Awaiting Data",
@@ -243,7 +249,7 @@ export const en = {
   // Room Management
   "room.unit": "Housing Unit",
   "room.lastClean": "Last Cleaning",
-  "room.cleanTime": "2h ago",
+  "room.cleanTime": "Status: Verified",
   "room.new": "New Room",
   "room.manual": "Add manually",
   "room.add": "Add Room",

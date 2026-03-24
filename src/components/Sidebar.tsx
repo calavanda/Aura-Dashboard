@@ -14,7 +14,9 @@ import {
   Settings,
   ListTodo,
   Sparkles,
-  Building2
+  Building2,
+  Zap,
+  ShieldAlert
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -120,6 +122,18 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
               label={t("nav.settings")} 
               active={activeTab === "Configuración"} 
               onClick={() => setActiveTab("Configuración")} 
+            />
+            <SidebarItem 
+              icon={Zap} 
+              label={t("nav.plans")} 
+              active={activeTab === "Planes"} 
+              onClick={() => setActiveTab("Planes")} 
+            />
+            <SidebarItem 
+              icon={ShieldAlert} 
+              label={t("nav.advanced")} 
+              active={activeTab === "Avanzado"} 
+              onClick={() => setActiveTab("Avanzado")} 
             />
           </div>
         )}

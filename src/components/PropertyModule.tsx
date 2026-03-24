@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { clsx } from "clsx";
 import { useI18n } from "@/context/I18nContext";
+import { useAura } from "@/context/AuraContext";
 import { AddAssetWizard } from "./AddAssetWizard";
 import {
   Trophy, 
@@ -19,11 +20,13 @@ import {
   Plus,
   FileDown,
   CalendarDays,
-  Users
+  Users,
+  Calendar
 } from "lucide-react";
 
 export function PropertyModule() {
   const { t } = useI18n();
+  const { reservations } = useAura();
   const [activeSubTab, setActiveSubTab] = useState("PORTFOLIO");
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   
@@ -114,10 +117,14 @@ export function PropertyModule() {
                      <div className="flex flex-wrap items-center gap-6">
                        <Legend dotColor="bg-[#3B82F6]" label={t("prop.trends.leg.rev")} />
                        <Legend dotColor="bg-[#FF385C]" label={t("prop.trends.leg.adr")} />
-                       <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-full flex items-center">
-                          <TrendingUp size={12} className="text-emerald-400 mr-2" />
-                          <span className="text-[9px] font-black tracking-widest text-emerald-400">{t("prop.trends.growth")}</span>
-                       </div>
+                       {reservations.length > 0 && (
+                        <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-full flex items-center">
+                           <TrendingUp size={12} className="text-emerald-400 mr-2" />
+                           <span className="text-[9px] font-black tracking-widest text-emerald-400">
+                             +18.4% {t("prop.trends.growth")}
+                           </span>
+                        </div>
+                       )}
                      </div>
                   </div>
 
@@ -232,87 +239,198 @@ function BottomKpiCard({ icon: Icon, label, value, trend, trendColor }: any) {
 // Calendar Sub-View
 // -------------------------------------------------------------
 function CalendarSubView({ t }: { t: any }) {
+  const { reservations } = useAura();
   const [viewMode, setViewMode] = useState<"MONTH" | "YEAR">("MONTH");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate());
+
+  const currentMonthIdx = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
   const daysOfWeek = t("prop.cal.days").split(",");
+  const monthNames = t("prop.cal.months").split(",");
+
+  // Get days in month
+  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+
+  const daysInMonth = getDaysInMonth(currentYear, currentMonthIdx);
+  const firstDay = getFirstDayOfMonth(currentYear, currentMonthIdx);
+  const calendarDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const blanks = Array.from({ length: firstDay }, (_, i) => i);
+
+  const prevMonth = () => setCurrentDate(new Date(currentYear, currentMonthIdx - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(currentYear, currentMonthIdx + 1, 1));
+  const goToday = () => {
+    const today = new Date();
+    setCurrentDate(today);
+    setSelectedDay(today.getDate());
+  };
   
-  // Dummy generate 31 days
-  const dummyDays = Array.from({ length: 31 }, (_, i) => i + 1);
+  // Filter reservations for selected day
+  const dayReservations = reservations.filter((res: any) => {
+     const resDate = new Date(res.checkIn);
+     return resDate.getDate() === selectedDay && 
+            resDate.getMonth() === currentMonthIdx && 
+            resDate.getFullYear() === currentYear;
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-6">
-          <h4 className="text-xl font-black text-white tracking-tighter">{t("prop.cal.outlook")} <span className="text-zinc-600 font-normal">/{viewMode === "MONTH" ? t("prop.cal.monthly") : t("prop.cal.annual")}</span></h4>
+          <h4 className="text-xl font-black text-white tracking-tighter">
+            {t("prop.cal.outlook")} <span className="text-zinc-600 font-normal">/{viewMode === "MONTH" ? t("prop.cal.monthly") : t("prop.cal.annual")}</span>
+          </h4>
           <div className="flex items-center space-x-2">
-            <button className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition">
+            <button onClick={prevMonth} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition">
               <ChevronLeft size={16} className="text-white" />
             </button>
-            <span className="text-xs font-black text-white px-2">{t("prop.cal.months").split(",")[2]} 2026</span>
-            <button className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition">
+            <span className="text-xs font-black text-white px-2 min-w-[120px] text-center">{monthNames[currentMonthIdx]} {currentYear}</span>
+            <button onClick={nextMonth} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition">
               <ChevronRight size={16} className="text-white" />
             </button>
-            <button className="ml-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-[9px] font-black tracking-widest uppercase text-white hover:bg-white/10 transition">
+            <button 
+              onClick={goToday}
+              className="ml-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-[9px] font-black tracking-widest uppercase text-white hover:bg-white/10 transition"
+            >
               {t("prop.cal.today")}
             </button>
           </div>
         </div>
         
-        {/* Toggle Month/Year */}
         <div className="flex bg-[#0A0A0A]/80 backdrop-blur-md p-1 rounded-full border border-white/5 shadow-inner">
-          <button 
-            onClick={() => setViewMode("MONTH")}
-            className={clsx("px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all", viewMode === "MONTH" ? "bg-[#FF385C] text-white shadow-lg" : "text-zinc-500 hover:text-white")}
-          >
+          <button onClick={() => setViewMode("MONTH")} className={clsx("px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all", viewMode === "MONTH" ? "bg-[#FF385C] text-white shadow-lg" : "text-zinc-500 hover:text-white")}>
             <CalendarDays size={10} className="inline mr-1" /> {t("prop.cal.month")}
           </button>
-          <button 
-            onClick={() => setViewMode("YEAR")}
-            className={clsx("px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all", viewMode === "YEAR" ? "bg-[#FF385C] text-white shadow-lg" : "text-zinc-500 hover:text-white")}
-          >
+          <button onClick={() => setViewMode("YEAR")} className={clsx("px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest transition-all", viewMode === "YEAR" ? "bg-[#FF385C] text-white shadow-lg" : "text-zinc-500 hover:text-white")}>
             <CalendarCheck size={10} className="inline mr-1" /> {t("prop.cal.year")}
           </button>
         </div>
       </div>
 
-      {viewMode === "MONTH" ? (
-        <div className="glass rounded-4xl border-white/5 overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-white/5 bg-white/2">
-            {daysOfWeek.map((d: string) => (
-              <div key={d} className="py-4 text-center text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 border-r border-white/5 last:border-r-0">
-                {d}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 auto-rows-[120px]">
-            {/* Blank start offsets for Sunday start (e.g. 5 blanks) */}
-            {Array.from({length: 0}).map((_, i) => <div key={`empty-${i}`} className="border-r border-b border-white/5 bg-[#0A0A0A]" />)}
-            
-            {dummyDays.map(day => (
-              <div key={day} className={clsx("border-r border-b border-white/5 p-3 relative group transition-colors", day === 23 ? "bg-[#111]" : "hover:bg-white/2")}>
-                <span className={clsx("text-xs font-black", day === 23 ? "text-white" : "text-zinc-600 group-hover:text-zinc-400")}>{day}</span>
-                {day === 23 && (
-                  <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#FF385C] flex items-center justify-center text-[8px] font-black text-white shadow-[0_0_10px_rgba(255,56,92,0.4)]">23</div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-           {/* Annual Grid Placeholders */}
-           {t("prop.cal.months").split(",").map((month: string, idx: number) => (
-             <div key={month} className="glass p-6 rounded-4xl border-white/5">
-                <h5 className={clsx("text-[10px] font-black uppercase tracking-widest mb-4", idx === 2 ? "text-[#FF385C]" : "text-white")}>{month} <span className="text-zinc-600">2026</span></h5>
-                <div className="grid grid-cols-7 gap-y-2 text-center text-[7px] font-bold text-zinc-600">
-                  {daysOfWeek.map((d: string) => <span key={d} className="text-zinc-700">{d[0]}</span>)}
-                  {Array.from({length: 31}, (_, i) => (
-                    <span key={i} className={clsx("py-1", month === "MARCH" && i === 22 ? "bg-[#FF385C] text-white rounded-full" : "text-zinc-500")}>{i + 1}</span>
-                  ))}
+      <div className="flex flex-col xl:flex-row gap-6">
+        {viewMode === "MONTH" ? (
+          <div className="flex-1 glass rounded-4xl border-white/5 overflow-hidden">
+            <div className="grid grid-cols-7 border-b border-white/5 bg-white/2">
+              {daysOfWeek.map((d: string) => (
+                <div key={d} className="py-4 text-center text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 border-r border-white/5 last:border-r-0">
+                  {d}
                 </div>
-             </div>
-           ))}
+              ))}
+            </div>
+            <div className="grid grid-cols-7 auto-rows-[100px]">
+              {blanks.map(i => <div key={`blank-${i}`} className="border-r border-b border-white/5 bg-[#080808]/50" />)}
+              
+              {calendarDays.map(day => {
+                const hasRes = reservations.some((res: any) => {
+                  const d = new Date(res.checkIn);
+                  return d.getDate() === day && d.getMonth() === currentMonthIdx && d.getFullYear() === currentYear;
+                });
+                const isSelected = selectedDay === day;
+                const isToday = new Date().getDate() === day && new Date().getMonth() === currentMonthIdx && new Date().getFullYear() === currentYear;
+
+                return (
+                  <div 
+                    key={day} 
+                    onClick={() => setSelectedDay(day)}
+                    className={clsx(
+                      "border-r border-b border-white/5 p-3 relative group transition-all cursor-pointer",
+                      isSelected ? "bg-white/5" : "hover:bg-white/2",
+                      isToday && !isSelected && "bg-white/2"
+                    )}
+                  >
+                    <span className={clsx(
+                      "text-xs font-black",
+                      isSelected || isToday ? "text-white" : "text-zinc-600 group-hover:text-zinc-400"
+                    )}>
+                      {day}
+                    </span>
+                    {hasRes && (
+                      <div className="absolute bottom-3 right-3 w-1.5 h-1.5 rounded-full bg-[#FF385C] shadow-[0_0_10px_rgba(255,56,92,0.6)]" />
+                    )}
+                    {isToday && (
+                      <div className="absolute top-3 right-3 text-[7px] font-black text-[#FF385C] tracking-tighter uppercase">Hoy</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             {monthNames.map((month: string, idx: number) => (
+               <div key={month} className="glass p-6 rounded-4xl border-white/5 bg-[#080808]">
+                  <h5 className={clsx("text-[10px] font-black uppercase tracking-widest mb-4", idx === currentMonthIdx ? "text-[#FF385C]" : "text-white")}>
+                    {month} <span className="text-zinc-600">{currentYear}</span>
+                  </h5>
+                  <div className="grid grid-cols-7 gap-y-2 text-center text-[7px] font-bold text-zinc-600">
+                    {daysOfWeek.map((d: string) => <span key={d} className="text-zinc-700">{d[0]}</span>)}
+                    {/* Simplified small grid for year view */}
+                    {Array.from({length: getFirstDayOfMonth(currentYear, idx)}).map((_, i) => <span key={`b-${idx}-${i}`} />)}
+                    {Array.from({length: getDaysInMonth(currentYear, idx)}, (_, i) => (
+                      <span key={i} className={clsx(
+                        "py-1",
+                        idx === currentMonthIdx && i === selectedDay! - 1 ? "bg-[#FF385C] text-white rounded-full" : "text-zinc-500"
+                      )}>
+                        {i + 1}
+                      </span>
+                    ))}
+                  </div>
+               </div>
+             ))}
+          </div>
+        )}
+
+        {/* Selected Day Details Panel */}
+        <div className="w-full xl:w-[350px] glass rounded-4xl border-white/5 p-8 flex flex-col bg-[#080808]">
+          <div className="mb-8">
+            <p className="text-[10px] font-black text-[#FF385C] uppercase tracking-[0.3em] font-institutional mb-2">Detalles del día</p>
+            <h5 className="text-2xl font-black text-white tracking-tighter">
+              {selectedDay} {monthNames[currentMonthIdx]}
+            </h5>
+          </div>
+
+          <div className="flex-1 space-y-4">
+            {dayReservations.length > 0 ? (
+              dayReservations.map((res: any) => (
+                <div key={res.id} className="p-4 rounded-2xl bg-white/2 border border-white/5 group hover:bg-white/5 transition-all">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[9px] font-black text-white uppercase tracking-wider">{res.guestName}</span>
+                    <span className={clsx(
+                      "text-[7px] font-bold px-1.5 py-0.5 rounded-full uppercase",
+                      res.status === "CONFIRMADO" ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-500/10 text-zinc-400"
+                    )}>
+                      {res.status}
+                    </span>
+                  </div>
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase">{t("room.unit")}: {res.roomNumber}</p>
+                </div>
+              ))
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
+                <Calendar size={32} className="text-zinc-600 mb-4" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">No hay reservas para este día</p>
+                <p className="text-[8px] font-bold text-zinc-700 mt-2 uppercase">Mantén el control de tu portafolio</p>
+              </div>
+            )}
+          </div>
+
+          {dayReservations.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-white/5">
+               <div className="flex justify-between text-[9px] font-black uppercase text-zinc-500 mb-2">
+                 <span>Ocupación Diaria</span>
+                 <span className="text-white">{(dayReservations.length / 5 * 100).toFixed(0)}%</span>
+               </div>
+               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                 <div 
+                   className="h-full bg-[#FF385C] transition-all duration-1000" 
+                   style={{ width: `${Math.min(100, (dayReservations.length / 5 * 100))}%` }} 
+                 />
+               </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -321,6 +439,21 @@ function CalendarSubView({ t }: { t: any }) {
 // Bookings Sub-View (Booking Desk)
 // -------------------------------------------------------------
 function BookingsSubView({ t }: { t: any }) {
+  const { reservations } = useAura();
+  const [selectedWeekDate, setSelectedWeekDate] = useState(new Date());
+
+  const weekDays = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1 + i);
+    return d;
+  });
+
+  const dayReservations = reservations.filter((res: any) => {
+    const d = new Date(res.checkIn);
+    return d.getDate() === selectedWeekDate.getDate() && 
+           d.getMonth() === selectedWeekDate.getMonth();
+  });
+
   return (
     <div className="space-y-6">
       {/* Header Metrics */}
@@ -331,7 +464,7 @@ function BookingsSubView({ t }: { t: any }) {
                 <CalendarCheck size={14} className="text-[#3B82F6]" />
                 <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t("prop.book.active")}</span>
              </div>
-             <p className="text-3xl font-black text-white tracking-tighter">0</p>
+             <p className="text-3xl font-black text-white tracking-tighter">{reservations.filter((r: any) => r.status === "CONFIRMADO").length}</p>
           </div>
           <div className="glass p-6 rounded-4xl border-white/5 bg-[#080808]">
              <div className="flex items-center space-x-2 mb-4">
@@ -350,17 +483,35 @@ function BookingsSubView({ t }: { t: any }) {
         </div>
         
         {/* Date Strip */}
-        <div className="w-full md:w-1/4 glass p-4 rounded-4xl border-white/5 bg-[#0A0A0A] flex flex-col justify-between">
+        <div className="w-full md:w-1/4 glass p-4 rounded-4xl border-white/5 bg-[#0A0A0A] flex flex-col justify-between overflow-hidden">
           <p className="text-[8px] font-black uppercase tracking-[0.2em] text-zinc-600 text-center mb-2">{t("prop.book.glance")}</p>
-          <div className="flex justify-between items-center px-2">
-            <ChevronLeft size={16} className="text-zinc-600" />
-            <div className="text-center bg-white/5 py-2 px-3 rounded-xl border border-[#FF385C]/30 shadow-[0_0_15px_rgba(255,56,92,0.1)]">
-              <p className="text-[8px] font-black text-[#FF385C] uppercase">MAY</p>
-              <p className="text-lg font-black text-white">23</p>
+          <div className="flex justify-between items-center px-1">
+            <ChevronLeft size={16} className="text-zinc-600 cursor-pointer" />
+            <div className="flex space-x-2">
+              {weekDays.map((date, idx) => {
+                const isSelected = date.getDate() === selectedWeekDate.getDate();
+                const isToday = date.getDate() === new Date().getDate();
+                
+                return (
+                  <div 
+                    key={idx}
+                    onClick={() => setSelectedWeekDate(date)}
+                    className={clsx(
+                      "text-center py-2 px-2.5 rounded-xl border transition-all cursor-pointer min-w-[45px]",
+                      isSelected 
+                        ? "bg-white/5 border-[#FF385C]/50 shadow-[0_0_15px_rgba(255,56,92,0.15)]" 
+                        : "border-white/5 opacity-50 hover:opacity-100"
+                    )}
+                  >
+                    <p className={clsx("text-[7px] font-black uppercase", isSelected ? "text-[#FF385C]" : "text-zinc-500")}>
+                      {date.toLocaleString('es-ES', { month: 'short' }).replace('.', '')}
+                    </p>
+                    <p className={clsx("text-sm font-black text-white", isToday && !isSelected && "text-[#3B82F6]")}>{date.getDate()}</p>
+                  </div>
+                );
+              })}
             </div>
-            <div className="text-center opacity-50"><p className="text-[8px] font-bold text-zinc-500">MAY</p><p className="text-xs font-black text-white">24</p></div>
-            <div className="text-center opacity-30"><p className="text-[8px] font-bold text-zinc-500">MAY</p><p className="text-xs font-black text-white">25</p></div>
-            <ChevronRight size={16} className="text-zinc-600" />
+            <ChevronRight size={16} className="text-zinc-600 cursor-pointer" />
           </div>
         </div>
       </div>
@@ -372,8 +523,12 @@ function BookingsSubView({ t }: { t: any }) {
         <div className="w-full xl:w-3/4 glass rounded-4xl border-white/5 p-6 flex flex-col min-h-[500px]">
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center space-x-3">
-              <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 font-institutional">{t("prop.book.awaiting")}</h5>
-              <span className="bg-[#FF385C]/10 text-[#FF385C] border border-[#FF385C]/20 px-2 py-0.5 rounded-full text-[8px] font-bold">{t("prop.book.total")}</span>
+              <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 font-institutional">
+                {t("prop.book.awaiting")} - {selectedWeekDate.toLocaleDateString()}
+              </h5>
+              <span className="bg-[#FF385C]/10 text-[#FF385C] border border-[#FF385C]/20 px-2 py-0.5 rounded-full text-[8px] font-bold">
+                {dayReservations.length} Total
+              </span>
             </div>
             <button className="bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-white text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-full flex items-center shadow-[0_0_15px_rgba(59,130,246,0.3)] transition">
                <Plus size={12} className="mr-2" /> {t("prop.book.new")}
@@ -387,29 +542,45 @@ function BookingsSubView({ t }: { t: any }) {
                </div>
                <input type="text" placeholder={t("prop.book.search")} className="w-full bg-[#0A0A0A] border border-white/5 rounded-full py-3 pl-10 pr-4 text-xs text-white outline-none focus:border-white/20 transition-all font-bold" />
              </div>
-             <button className="bg-[#0A0A0A] border border-white/5 text-zinc-400 text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full hover:bg-white/5 transition flex items-center">
-               {t("prop.book.allProp")} <ChevronRight size={12} className="ml-2 rotate-90" />
-             </button>
-             <button className="bg-[#0A0A0A] border border-white/5 text-zinc-400 text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full hover:bg-white/5 transition flex items-center">
-               {t("prop.book.anyAmt")} <ChevronRight size={12} className="ml-2 rotate-90" />
-             </button>
           </div>
 
-          <div className="flex-1 border border-white/5 rounded-3xl bg-[#080808] flex items-center justify-center relative overflow-hidden">
-             {/* Empty State */}
-             <div className="text-center relative z-10">
-               <Filter size={40} className="mx-auto text-zinc-800 mb-6" />
-               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 font-institutional">{t("prop.book.noMatch")}</p>
-             </div>
-          </div>
-          
-          <div className="flex items-center justify-between mt-6">
-            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600">{t("prop.book.display")}</span>
-            <div className="flex space-x-2">
-               <button className="w-6 h-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center"><ChevronLeft size={10} className="text-zinc-500" /></button>
-               <button className="w-6 h-6 rounded-md bg-[#FF385C] flex items-center justify-center text-[9px] font-black text-white shadow-lg">1</button>
-               <button className="w-6 h-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center"><ChevronRight size={10} className="text-zinc-500" /></button>
-            </div>
+          <div className="flex-1 border border-white/5 rounded-3xl bg-[#080808] flex flex-col relative overflow-hidden">
+             {dayReservations.length > 0 ? (
+               <div className="overflow-x-auto">
+                 <table className="w-full text-left">
+                   <thead className="border-b border-white/5 bg-white/1">
+                     <tr>
+                       <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-zinc-500">Huésped</th>
+                       <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-zinc-500">Unidad</th>
+                       <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-zinc-500">Estado</th>
+                       <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-zinc-500 text-right">Monto</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {dayReservations.map((res: any) => (
+                       <tr key={res.id} className="border-b border-white/5 hover:bg-white/2 transition-colors">
+                         <td className="px-6 py-4 text-[10px] font-black text-white">{res.guestName}</td>
+                         <td className="px-6 py-4 text-[10px] font-bold text-zinc-400">{res.roomNumber}</td>
+                         <td className="px-6 py-4">
+                           <span className={clsx(
+                             "text-[8px] font-black px-2 py-0.5 rounded-full uppercase",
+                             res.status === "CONFIRMADO" ? "bg-emerald-500/10 text-emerald-400" : "bg-[#FF385C]/10 text-[#FF385C]"
+                           )}>{res.status}</span>
+                         </td>
+                         <td className="px-6 py-4 text-[10px] font-black text-white text-right">${res.amount || 0}</td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+             ) : (
+               <div className="flex-1 flex items-center justify-center">
+                 <div className="text-center relative z-10">
+                   <Filter size={40} className="mx-auto text-zinc-800 mb-6" />
+                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 font-institutional">{t("prop.book.noMatch")}</p>
+                 </div>
+               </div>
+             )}
           </div>
         </div>
 
@@ -504,4 +675,3 @@ function ListingsSubView({ onOpenWizard, t }: { onOpenWizard: () => void, t: any
     </div>
   );
 }
-

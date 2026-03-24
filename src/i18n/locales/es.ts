@@ -29,6 +29,8 @@ export const es = {
   "nav.logs": "Logs",
   "nav.sandbox": "Sandbox",
   "nav.settings": "Configuración",
+  "nav.plans": "Planes",
+  "nav.advanced": "Avanzado",
   "nav.logout": "Cerrar Sesión",
 
   // Dashboard Stats
@@ -87,7 +89,7 @@ export const es = {
   "prop.trends.disclaimer": "Los datos reflejan ingresos brutos verificados y promedios nocturnos. Los ajustes históricos pueden aplicar durante la conciliación de fin de trimestre.",
   "prop.trends.leg.rev": "INGRESOS MENSUALES",
   "prop.trends.leg.adr": "TARIFA DIARIA PROM.",
-  "prop.trends.growth": "+18.4% Crecimiento vs Año Anterior",
+  "prop.trends.growth": "Crecimiento vs Año Anterior",
   
   "prop.bottom.bookings": "RESERVAS MENSUALES",
   "prop.bottom.forecast": "PRONÓSTICO DE INGRESOS",
@@ -140,6 +142,10 @@ export const es = {
   "prop.list.filter": "FILTRAR",
   "prop.list.add": "AGREGAR ACTIVO",
   "prop.list.empty": "No hay activos en el portafolio. Usa 'Agregar Activo' para iniciar la gestión.",
+  
+  "adv.warning.title": "ACCESO RESTRINGIDO",
+  "adv.warning.desc": "Esta sección contiene herramientas críticas que pueden eliminar datos permanentemente. Al proceder, confirmas que eres plenamente consciente de que cualquier purga de datos es irreversible.",
+  "adv.warning.proceed": "ENTIENDO LOS RIESGOS, PROCEDER",
 
   // Empty State Awaiting Data
   "empty.title": "Sin Datos",
@@ -243,7 +249,7 @@ export const es = {
   // Room Management
   "room.unit": "Unidad de Vivienda",
   "room.lastClean": "Última Limpieza",
-  "room.cleanTime": "Hace 2h",
+  "room.cleanTime": "Estado: Verificado",
   "room.new": "Nueva Habitación",
   "room.manual": "Agregar manualmente",
   "room.add": "Agregar Habitación",

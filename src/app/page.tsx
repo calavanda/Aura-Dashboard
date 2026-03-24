@@ -42,6 +42,8 @@ import { GuestModule } from "../components/GuestModule";
 import { SettingsModule } from "@/components/SettingsModule";
 import { PremiumGuard } from "@/components/PremiumGuard";
 import { PropertyModule } from "@/components/PropertyModule";
+import { PlansModule } from "@/components/PlansModule";
+import { AdvancedModule } from "@/components/AdvancedModule";
 
 function StatCard({ title, value, change, icon: Icon, trend }: { title: string, value: string, change: string, icon: any, trend: "up" | "down" | "neutral" }) {
   return (
@@ -264,6 +266,8 @@ function AuraDashboardContent() {
                   {activeTab === "Logs" && t("nav.logs")}
                   {activeTab === "Sandbox" && t("nav.sandbox")}
                   {activeTab === "Configuración" && t("nav.settings")}
+                  {activeTab === "Planes" && t("nav.plans")}
+                  {activeTab === "Avanzado" && t("nav.advanced")}
                 </h2>
                 <ChevronRight className="text-zinc-800" size={20} />
                 <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] font-institutional">{t("header.institutional")}</span>
@@ -348,6 +352,16 @@ function AuraDashboardContent() {
               {activeTab === "Configuración" && (
                 <motion.div key="settings" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                   <SettingsModule />
+                </motion.div>
+              )}
+              {activeTab === "Planes" && (
+                <motion.div key="plans" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                  <PlansModule />
+                </motion.div>
+              )}
+              {activeTab === "Avanzado" && (
+                <motion.div key="advanced" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                  <AdvancedModule />
                 </motion.div>
               )}
             </AnimatePresence>
