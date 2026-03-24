@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { clsx } from "clsx";
 import { useI18n } from "@/context/I18nContext";
-import { 
+import { AddAssetWizard } from "./AddAssetWizard";
+import {
   Trophy, 
   Flame, 
   Gem, 
@@ -17,12 +18,14 @@ import {
   Filter,
   Plus,
   FileDown,
-  CalendarDays
+  CalendarDays,
+  Users
 } from "lucide-react";
 
 export function PropertyModule() {
   const { t } = useI18n();
   const [activeSubTab, setActiveSubTab] = useState("PORTFOLIO");
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   
   const subTabs = [
     { id: "PORTFOLIO", label: t("prop.tab.portfolio") },
@@ -118,11 +121,11 @@ export function PropertyModule() {
                      </div>
                   </div>
 
-                  {/* Abstract Graph Representation */}
-                  <div className="absolute top-1/2 left-0 w-full h-1/2 bg-linear-to-t from-[#3B82F6]/10 to-transparent opacity-30 pointer-events-none" />
+                  {/* Absolute Zero Base Graph Representation */}
+                  <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/10" />
                   <svg className="w-full h-[60%] md:h-48 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] mt-8" preserveAspectRatio="none" viewBox="0 0 100 100">
-                    <path d="M0,80 Q25,75 50,60 T100,65" fill="none" stroke="#3B82F6" strokeWidth="1" />
-                    <path d="M0,90 Q25,85 50,85 T100,75" fill="none" stroke="#FF385C" strokeWidth="0.5" strokeDasharray="2,2" />
+                    <path d="M0,95 L100,95" fill="none" stroke="#3B82F6" strokeWidth="1" />
+                    <path d="M0,97 L100,97" fill="none" stroke="#FF385C" strokeWidth="0.5" strokeDasharray="2,2" />
                   </svg>
                   
                   {/* Timeline X-Axis */}
@@ -157,7 +160,15 @@ export function PropertyModule() {
             <BookingsSubView t={t} />
           </motion.div>
         )}
+        {activeSubTab === "LISTINGS" && (
+          <motion.div key="listings" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+            <ListingsSubView onOpenWizard={() => setIsWizardOpen(true)} />
+          </motion.div>
+        )}
       </AnimatePresence>
+
+      {/* 8-Step Property Creation Wizard */}
+      <AddAssetWizard isOpen={isWizardOpen} onClose={() => setIsWizardOpen(false)} />
     </div>
   );
 }
@@ -431,6 +442,67 @@ function BookingsSubView({ t }: { t: any }) {
            </div>
         </div>
         
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// Listings Sub-View
+// -------------------------------------------------------------
+function ListingsSubView({ onOpenWizard }: { onOpenWizard: () => void }) {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="w-full md:w-1/2 glass p-6 rounded-[2rem] border-white/5 bg-[#080808] flex justify-between items-center">
+           <div>
+             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">TOTAL REVENUE</span>
+             <p className="text-4xl font-black text-[#10b981] tracking-tighter">$72,400</p>
+           </div>
+           <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[8px] font-bold">+12%</span>
+        </div>
+        <div className="w-full md:w-1/4 glass p-6 rounded-[2rem] border-white/5 bg-[#080808] flex justify-between items-center">
+           <div>
+             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">OCCUPANCY</span>
+             <p className="text-4xl font-black text-[#3B82F6] tracking-tighter">84%</p>
+           </div>
+           <span className="bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20 px-2 py-0.5 rounded-full text-[8px] font-bold">+3%</span>
+        </div>
+        <div className="w-full md:w-1/4 glass p-6 rounded-[2rem] border-white/5 bg-[#080808] flex justify-between items-start">
+           <div>
+             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">ACTIVE ASSETS</span>
+             <p className="text-4xl font-black text-[#FF385C] tracking-tighter">0</p>
+           </div>
+           <span className="text-[8px] font-black tracking-widest px-2 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400">Stable</span>
+        </div>
+      </div>
+
+      <div className="glass rounded-[2rem] border-white/5 p-6 min-h-[500px] flex flex-col">
+        <div className="flex justify-between items-center mb-8">
+          <div className="relative w-1/3">
+             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+               <Filter size={12} className="text-zinc-500" />
+             </div>
+             <input type="text" placeholder="Search assets by name or ID..." className="w-full bg-[#0A0A0A] border border-white/5 rounded-full py-3 pl-10 pr-4 text-xs text-white outline-none focus:border-white/20 transition-all font-bold" />
+          </div>
+          <div className="flex space-x-4">
+            <button className="bg-[#0A0A0A] border border-white/5 text-zinc-400 text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full hover:bg-white/5 transition flex items-center">
+               <Filter size={12} className="mr-2" /> FILTER
+            </button>
+            <button 
+              onClick={onOpenWizard}
+              className="bg-[#FF385C] hover:bg-[#FF385C]/90 text-white text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full flex items-center shadow-[0_0_15px_rgba(255,56,92,0.4)] transition"
+            >
+               <Plus size={12} className="mr-2" /> ADD ASSET
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center">
+           <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] font-institutional text-center italic">
+             No portfolio assets registered. Use 'Add Asset' to initialize management.
+           </p>
+        </div>
       </div>
     </div>
   );
