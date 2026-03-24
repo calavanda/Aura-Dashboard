@@ -15,6 +15,7 @@ import {
   UserButton,
   useUser 
 } from "@clerk/nextjs";
+import { useI18n } from "@/context/I18nContext";
 import { clsx } from "clsx";
 import { 
   Bell, 
@@ -39,6 +40,7 @@ import { AuditLogsModule } from "../components/AuditLogsModule";
 import { GuestModule } from "../components/GuestModule";
 import { SettingsModule } from "@/components/SettingsModule";
 import { PremiumGuard } from "@/components/PremiumGuard";
+import { PropertyModule } from "@/components/PropertyModule";
 
 function StatCard({ title, value, change, icon: Icon, trend }: { title: string, value: string, change: string, icon: any, trend: "up" | "down" | "neutral" }) {
   return (
@@ -76,6 +78,7 @@ function StatCard({ title, value, change, icon: Icon, trend }: { title: string, 
 
 function DashboardHome() {
   const { rooms, reservations, hotelConfig } = useAura();
+  const { t } = useI18n();
   
   const occupiedCount = rooms.filter(r => r.status === "Ocupada").length;
   const occupancyRate = rooms.length > 0 ? Math.round((occupiedCount / rooms.length) * 100) : 0;
@@ -104,10 +107,10 @@ function DashboardHome() {
 
       {/* Stats Grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-        <StatCard title="Portfolio Occupancy" value={`${occupancyRate}%`} change="+4.2%" trend="up" icon={Bed} />
-        <StatCard title="Institutional RevPAR" value="$240" change="+12%" trend="up" icon={CreditCard} />
-        <StatCard title="Check-in Velocity" value={`${reservations.length}`} change="Stable" trend="neutral" icon={CheckCircle2} />
-        <StatCard title="Operational Tasks" value="12" change="+3" trend="down" icon={Clock} />
+        <StatCard title={t("dash.occupancy.title")} value={`${occupancyRate}%`} change="+4.2%" trend="up" icon={Bed} />
+        <StatCard title={t("dash.revpar.title")} value="$240" change="+12%" trend="up" icon={CreditCard} />
+        <StatCard title={t("dash.checkin.title")} value={`${reservations.length}`} change={t("dash.stable")} trend="neutral" icon={CheckCircle2} />
+        <StatCard title={t("dash.tasks.title")} value="12" change="+3" trend="down" icon={Clock} />
       </section>
 
       {/* Main Content Areas */}
@@ -115,11 +118,11 @@ function DashboardHome() {
         <div className="xl:col-span-2 space-y-10">
           <div className="flex justify-between items-end px-2">
             <div>
-              <h3 className="text-3xl font-black tracking-tighter text-white">Property Hub</h3>
-              <p className="text-zinc-500 text-xs mt-1 font-institutional tracking-[0.2em] font-black">Live Inventory</p>
+              <h3 className="text-3xl font-black tracking-tighter text-white">{t("dash.hub.title")}</h3>
+              <p className="text-zinc-500 text-xs mt-1 font-institutional tracking-[0.2em] font-black">{t("dash.hub.subtitle")}</p>
             </div>
             <button className="text-[9px] font-black text-white flex items-center hover:opacity-80 transition-opacity uppercase tracking-[0.3em] font-institutional bg-white/5 border border-white/10 px-6 py-3 rounded-2xl">
-              Expand View <ChevronRight size={14} className="ml-2 text-[#3B82F6]" />
+              {t("dash.hub.expand")} <ChevronRight size={14} className="ml-2 text-[#3B82F6]" />
             </button>
           </div>
           
@@ -129,10 +132,10 @@ function DashboardHome() {
                 <div className="w-24 h-24 bg-white/5 rounded-[40px] flex items-center justify-center mx-auto mb-10 border border-white/10">
                   <Sparkles className="text-[#FF385C]" size={40} />
                 </div>
-                <h4 className="text-white font-black text-2xl mb-3 tracking-tighter font-institutional uppercase">Awaiting Data</h4>
-                <p className="text-zinc-500 text-sm max-w-md mx-auto font-medium">Initialize your property network through the enterprise integration wizard to populate this view.</p>
+                <h4 className="text-white font-black text-2xl mb-3 tracking-tighter font-institutional uppercase">{t("empty.title")}</h4>
+                <p className="text-zinc-500 text-sm max-w-md mx-auto font-medium">{t("empty.desc")}</p>
                 <button className="mt-12 bg-white text-black font-black text-[10px] px-10 py-5 rounded-4xl uppercase tracking-[0.3em] hover:bg-[#FF385C] hover:text-white transition-all shadow-2xl font-institutional">
-                  Begin Integration
+                  {t("empty.button")}
                 </button>
               </div>
             )}
@@ -141,8 +144,8 @@ function DashboardHome() {
 
         <div className="space-y-12">
           <div className="px-2">
-            <h3 className="text-3xl font-black tracking-tighter text-white">Intelligence</h3>
-            <p className="text-zinc-500 text-xs mt-1 font-institutional tracking-[0.2em] font-black">AI Forensics</p>
+            <h3 className="text-3xl font-black tracking-tighter text-white">{t("dash.intel.title")}</h3>
+            <p className="text-zinc-500 text-xs mt-1 font-institutional tracking-[0.2em] font-black">{t("dash.intel.subtitle")}</p>
           </div>
           
           <motion.div 
@@ -155,9 +158,9 @@ function DashboardHome() {
               <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center mb-10 group-hover:border-[#3B82F6]/30 transition-all group-hover:shadow-[0_0_20px_rgba(59,130,246,0.1)]">
                 <TrendingUp size={32} className="text-[#3B82F6]" />
               </div>
-              <h4 className="text-white font-black tracking-tighter text-4xl mb-6 leading-[0.9] font-institutional uppercase">Predictive<br/>Revenue</h4>
+              <h4 className="text-white font-black tracking-tighter text-4xl mb-6 leading-[0.9] font-institutional uppercase">{t("dash.intel.predictive")}<br/>{t("dash.intel.revenue")}</h4>
               <p className="text-sm text-zinc-500 leading-relaxed font-semibold">
-                Gathering institutional data points. Advanced forecasting requires a minimum of 7 days of operational logs.
+                {t("dash.intel.desc")}
               </p>
               <div className="mt-12 h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                 <motion.div 
@@ -167,7 +170,7 @@ function DashboardHome() {
                   className="h-full bg-[#3B82F6] shadow-[0_0_20px_rgba(59,130,246,0.8)]" 
                 />
               </div>
-              <p className="text-[9px] text-[#3B82F6] font-black uppercase tracking-[0.4em] mt-6 font-institutional">Convergence: 24%</p>
+              <p className="text-[9px] text-[#3B82F6] font-black uppercase tracking-[0.4em] mt-6 font-institutional">{t("dash.intel.convergence")}</p>
             </div>
           </motion.div>
         </div>
@@ -181,6 +184,7 @@ function AuraDashboardContent() {
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [showTour, setShowTour] = useState(false);
   const { user } = useUser();
+  const { t } = useI18n();
 
   const AUTHORIZED_EMAILS = [
     "itslacia@gmail.com",
@@ -239,12 +243,21 @@ function AuraDashboardContent() {
               animate={{ opacity: 1, x: 0 }}
             >
               <div className="flex items-center space-x-4 mb-1">
-                <h2 className="text-4xl font-black tracking-tighter text-white font-institutional leading-none">{activeTab}</h2>
+                <h2 className="text-4xl font-black tracking-tighter text-white font-institutional leading-none">
+                  {activeTab === "Dashboard" && t("nav.dashboard")}
+                  {activeTab === "Reservaciones" && t("nav.reservations")}
+                  {activeTab === "Habitaciones" && t("nav.inventory")}
+                  {activeTab === "Huéspedes" && t("nav.guests")}
+                  {activeTab === "Finanzas" && t("nav.finances")}
+                  {activeTab === "Logs" && t("nav.logs")}
+                  {activeTab === "Sandbox" && t("nav.sandbox")}
+                  {activeTab === "Configuración" && t("nav.settings")}
+                </h2>
                 <ChevronRight className="text-zinc-800" size={20} />
-                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] font-institutional">Institutional</span>
+                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] font-institutional">{t("header.institutional")}</span>
               </div>
               <p className="text-[9px] text-[#FF385C] font-black uppercase tracking-[0.4em] font-institutional mt-2">
-                System ID: {hotelConfig?.name?.toUpperCase() || "CORE-ALPHA-01"}
+                {t("header.systemId")}: {hotelConfig?.name?.toUpperCase() || "CORE-ALPHA-01"}
               </p>
             </motion.div>
 
@@ -274,20 +287,25 @@ function AuraDashboardContent() {
                   <ReservationList />
                 </motion.div>
               )}
+              {activeTab === "Mis Propiedades" && (
+                <motion.div key="prop" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                  <PropertyModule />
+                </motion.div>
+              )}
               {activeTab === "Habitaciones" && (
                 <motion.div key="rooms" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                   <div className="space-y-16">
                     <div className="flex justify-between items-end px-2">
                       <div>
-                        <h3 className="text-5xl font-black tracking-tighter text-white">Unit Network</h3>
-                        <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.4em] font-institutional mt-3">Active Inventory Management</p>
+                        <h3 className="text-5xl font-black tracking-tighter text-white">{t("inventory.title")}</h3>
+                        <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.4em] font-institutional mt-3">{t("inventory.subtitle")}</p>
                       </div>
                       {role === "ADMIN" && (
                         <button 
                           onClick={() => confirm("Confirm inventory purging?") && clearRooms()}
                           className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-700 hover:text-[#FF385C] transition-colors font-institutional"
                         >
-                          Institutional Reset
+                          {t("inventory.reset")}
                         </button>
                       )}
                     </div>
@@ -331,6 +349,7 @@ function AuraDashboardContent() {
 function AuthGate() {
   const { user, isLoaded } = useUser();
   const [mounted, setMounted] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     setMounted(true);
@@ -359,10 +378,10 @@ function AuthGate() {
             <span className="text-white font-black text-2xl font-institutional mt-1">A</span>
           </div>
           <h1 className="text-5xl font-black tracking-tighter text-white mb-2 font-institutional leading-none">
-            WELCOME <span className="text-[#FF385C]">BACK</span>
+            {t("auth.welcome")} <span className="text-[#FF385C]">{t("auth.back")}</span>
           </h1>
           <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] font-institutional">
-            ACCESS YOUR PROPERTY COMMAND CENTER
+            {t("auth.subtitle")}
           </p>
         </motion.div>
 
@@ -411,7 +430,7 @@ function AuthGate() {
            className="mt-12 text-center"
         >
           <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] font-institutional">
-            NEW TO AURA? <a href="#" className="text-[#FF385C] hover:underline">CREATE ACCOUNT</a>
+            {t("auth.newToAura")} <a href="#" className="text-[#FF385C] hover:underline">{t("auth.createAccount")}</a>
           </p>
         </motion.div>
       </div>
@@ -427,7 +446,7 @@ function AuthGate() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, ease: "easeOut" }}
-          className="relative w-full max-w-2xl aspect-[16/10] bg-[#0A0A0A] rounded-[2rem] border border-zinc-900 shadow-2xl p-6 flex flex-col z-10 opacity-60"
+          className="relative w-full max-w-2xl aspect-16/10 bg-[#0A0A0A] rounded-4xl border border-zinc-900 shadow-2xl p-6 flex flex-col z-10 opacity-60"
         >
           {/* Mockup Header */}
           <div className="flex justify-between items-center border-b border-zinc-900 pb-4 mb-6">

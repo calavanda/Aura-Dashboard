@@ -3,6 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ClerkProvider } from "@clerk/nextjs";
+import { I18nProvider } from "@/context/I18nContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -64,7 +65,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <I18nProvider>
+              {children}
+            </I18nProvider>
           </ThemeProvider>
         </body>
       </html>

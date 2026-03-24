@@ -8,16 +8,18 @@ import {
   Bed, 
   Users, 
   CreditCard, 
-  Settings, 
   LogOut,
   ChevronRight,
   TestTube2,
+  Settings,
   ListTodo,
-  Sparkles
+  Sparkles,
+  Building2
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useClerk } from "@clerk/nextjs";
+import { useI18n } from "@/context/I18nContext";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -33,6 +35,7 @@ interface SidebarProps {
 const menuItems = [
   { id: "Dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "GERENTE", "RESERVADOR"] },
   { id: "Reservaciones", icon: Calendar, label: "Reservaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"] },
+  { id: "Mis Propiedades", icon: Building2, label: "Mis Propiedades", roles: ["ADMIN", "GERENTE"] },
   { id: "Habitaciones", icon: Bed, label: "Habitaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"] },
   { id: "Huéspedes", icon: Users, label: "Huéspedes", roles: ["ADMIN", "GERENTE"] },
   { id: "Finanzas", icon: CreditCard, label: "Finanzas", roles: ["ADMIN"] },
@@ -42,6 +45,7 @@ const menuItems = [
 export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarProps) {
   const [mounted, setMounted] = React.useState(false);
   const { signOut } = useClerk();
+  const { language, setLanguage, t } = useI18n();
   React.useEffect(() => setMounted(true), []);
 
   const filteredItems = menuItems.filter(item => !role || item.roles.includes(role));
@@ -88,7 +92,16 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
           >
             <div className="flex items-center space-x-4 relative z-10">
               <item.icon size={18} className={activeTab === item.id ? "text-[#3B82F6]" : "group-hover:text-white transition-colors"} />
-              <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", activeTab === item.id ? "text-white" : "text-zinc-500")}>{item.label}</span>
+              <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", activeTab === item.id ? "text-white" : "text-zinc-500")}>
+                {item.id === "Dashboard" && t("nav.dashboard")}
+                {item.id === "Reservaciones" && t("nav.reservations")}
+                {item.id === "Mis Propiedades" && t("nav.properties")}
+                {item.id === "Habitaciones" && t("nav.inventory")}
+                {item.id === "Huéspedes" && t("nav.guests")}
+                {item.id === "Finanzas" && t("nav.finances")}
+                {item.id === "Logs" && t("nav.logs")}
+                {item.id === "Sandbox" && t("nav.sandbox")}
+              </span>
             </div>
             {activeTab === item.id && (
               <motion.div 
@@ -104,7 +117,7 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
             <div className="pb-2 px-3 text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em]">Management</div>
             <SidebarItem 
               icon={Settings} 
-              label="Configuración" 
+              label={t("nav.settings")} 
               active={activeTab === "Configuración"} 
               onClick={() => setActiveTab("Configuración")} 
             />
@@ -114,14 +127,41 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
 
       {/* Footer Area */}
       <div className="pt-8 border-t border-white/5 space-y-4">
-        <SidebarItem icon={LogOut} label="Log Out" onClick={() => signOut({ redirectUrl: '/sign-in' })} />
+        {/* Language Toggle */}
+        <div className="flex items-center justify-center p-1 bg-white/5 rounded-2xl border border-white/5">
+          <button
+            onClick={() => setLanguage('es')}
+            className={cn(
+              "flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all",
+              language === 'es' ? "bg-white/10 text-white shadow-lg" : "text-zinc-500 hover:text-white"
+            )}
+          >
+            ES
+          </button>
+          <button
+            onClick={() => setLanguage('en')}
+            className={cn(
+              "flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all",
+              language === 'en' ? "bg-white/10 text-white shadow-lg" : "text-zinc-500 hover:text-white"
+            )}
+          >
+            EN
+          </button>
+        </div>
+
+        <SidebarItem icon={LogOut} label={t("nav.logout")} onClick={() => signOut({ redirectUrl: '/sign-in' })} />
         <div className="bg-white/2 p-4 rounded-2xl border border-white/5 flex items-center space-x-3">
           <div className="w-8 h-8 rounded-xl bg-zinc-900 flex items-center justify-center font-black text-[10px] text-zinc-500 border border-white/5">
             {role?.[0] || "U"}
           </div>
           <div className="flex flex-col overflow-hidden">
             <span className="text-[10px] font-black text-white uppercase tracking-wider truncate">Operator</span>
-            <span className="text-[8px] font-bold text-[#FF385C] uppercase tracking-widest">{role || "Staff"}</span>
+            <span className="text-[8px] font-bold text-[#FF385C] uppercase tracking-widest">
+               {role === "ADMIN" && t("sidebar.role.admin")}
+               {role === "GERENTE" && t("sidebar.role.manager")}
+               {role === "RESERVADOR" && t("sidebar.role.staff")}
+               {!role && t("sidebar.role.user")}
+            </span>
           </div>
         </div>
       </div>
