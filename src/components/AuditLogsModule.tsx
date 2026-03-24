@@ -11,20 +11,22 @@ import {
   ClipboardList
 } from "lucide-react";
 import { useAura } from "@/context/AuraContext";
+import { useI18n } from "@/context/I18nContext";
 
 export function AuditLogsModule() {
   const { logs } = useAura();
+  const { t } = useI18n();
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex justify-between items-end mb-8">
+    <div className="space-y-6 max-w-4xl mx-auto px-4 md:px-0">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
         <div>
-          <h3 className="text-3xl font-bold font-outfit text-foreground tracking-tight">Registro de Auditoría</h3>
-          <p className="text-muted text-sm mt-2">Seguimiento en tiempo real de todas las acciones del sistema.</p>
+          <h3 className="text-4xl font-black font-institutional text-white tracking-tighter uppercase">{t("audit.title")}</h3>
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] font-institutional mt-3">{t("audit.subtitle")}</p>
         </div>
-        <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-widest bg-primary/10 px-4 py-2 rounded-full">
-          <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-          En Vivo
+        <div className="flex items-center gap-3 text-[10px] font-black text-primary uppercase tracking-[0.2em] font-institutional bg-primary/10 px-6 py-3 rounded-full border border-primary/20">
+          <span className="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_10px_var(--primary)]"></span>
+          {t("audit.live")}
         </div>
       </div>
 
@@ -49,30 +51,32 @@ export function AuditLogsModule() {
               <div className="flex-1">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{log.action}</p>
-                    <p className="text-xs text-muted mt-1">{log.details || 'Sin detalles adicionales'}</p>
+                    <p className="text-sm font-black text-white group-hover:text-primary transition-colors tracking-tight">{log.action}</p>
+                    <p className="text-[10px] text-zinc-500 mt-1 font-bold uppercase tracking-wider">{log.details || t("audit.noDetails")}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-bold text-foreground uppercase">{log.userName}</p>
-                    <p className="text-[10px] text-muted mt-1">{new Date(log.timestamp).toLocaleTimeString()}</p>
+                    <p className="text-[9px] font-black text-white uppercase tracking-widest font-institutional">{log.userName}</p>
+                    <p className="text-[10px] text-zinc-600 mt-1 font-medium">{new Date(log.timestamp).toLocaleTimeString()}</p>
                   </div>
                 </div>
               </div>
             </motion.div>
           ))
         ) : (
-          <div className="glass p-20 rounded-[40px] text-center space-y-4">
-             <Activity size={40} className="mx-auto text-muted mb-4" />
-             <h4 className="text-lg font-bold font-outfit">Sin actividad reciente</h4>
-             <p className="text-sm text-muted">Las acciones realizadas por el equipo aparecerán aquí.</p>
+          <div className="glass p-32 rounded-[40px] border-white/5 text-center space-y-6">
+             <div className="w-24 h-24 bg-white/5 rounded-[40px] flex items-center justify-center mx-auto text-zinc-600 border border-white/10 mb-4">
+               <Activity size={40} />
+             </div>
+             <h4 className="text-2xl font-black font-institutional text-white uppercase tracking-tighter">{t("audit.noActivity")}</h4>
+             <p className="text-sm text-zinc-500 max-w-xs mx-auto font-medium">{t("audit.activityDesc")}</p>
           </div>
         )}
       </div>
         
-      <div className="p-6 bg-accent/20 text-center rounded-3xl mt-8">
-        <button className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] hover:tracking-[0.3em] transition-all flex items-center gap-2 mx-auto">
-          <Clock size={14} />
-          Ver Historial Completo
+      <div className="p-10 bg-white/2 text-center rounded-[32px] mt-12 border border-white/5">
+        <button className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] font-institutional hover:text-primary transition-all flex items-center gap-3 mx-auto group">
+          <Clock size={16} className="group-hover:rotate-12 transition-transform" />
+          {t("audit.viewHistory")}
         </button>
       </div>
     </div>

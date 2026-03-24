@@ -89,11 +89,11 @@ export function PropertyModule() {
                   {t("prop.snap.title")}
                 </h4>
                 <div className="glass rounded-4xl p-6 space-y-4 border-white/5 bg-white/1 flex-1 flex flex-col justify-between" style={{ minHeight: '400px' }}>
-                  <SnapshotRow icon={Trophy} title={t("prop.snap.best")} value="N/A" sub="$0" subDesc="REVENUE LEADER" valueColor="text-[#10b981]" />
+                  <SnapshotRow icon={Trophy} title={t("prop.snap.best")} value="N/A" sub="$0" subDesc={t("prop.snap.best.sub")} valueColor="text-[#10b981]" />
                   <div className="w-full h-px bg-white/5" />
-                  <SnapshotRow icon={Flame} title={t("prop.snap.most")} value="N/A" sub="0%" subDesc="PEAK OCCUPANCY" valueColor="text-[#3B82F6]" />
+                  <SnapshotRow icon={Flame} title={t("prop.snap.most")} value="N/A" sub="0%" subDesc={t("prop.snap.most.sub")} valueColor="text-[#3B82F6]" />
                   <div className="w-full h-px bg-white/5" />
-                  <SnapshotRow icon={Gem} title={t("prop.snap.highest")} value="N/A" sub="$0" subDesc="MARKET PREMIUM" valueColor="text-[#FF385C]" />
+                  <SnapshotRow icon={Gem} title={t("prop.snap.highest")} value="N/A" sub="$0" subDesc={t("prop.snap.highest.sub")} valueColor="text-[#FF385C]" />
                 </div>
               </div>
 
@@ -112,21 +112,18 @@ export function PropertyModule() {
                        </p>
                      </div>
                      <div className="flex flex-wrap items-center gap-6">
-                       <Legend dotColor="bg-[#3B82F6]" label="MONTHLY REVENUE" />
-                       <Legend dotColor="bg-[#FF385C]" label="AVERAGE DAILY RATE" />
+                       <Legend dotColor="bg-[#3B82F6]" label={t("prop.trends.leg.rev")} />
+                       <Legend dotColor="bg-[#FF385C]" label={t("prop.trends.leg.adr")} />
                        <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-full flex items-center">
                           <TrendingUp size={12} className="text-emerald-400 mr-2" />
-                          <span className="text-[9px] font-black tracking-widest text-emerald-400">+18.4% Growth vs Prev Year</span>
+                          <span className="text-[9px] font-black tracking-widest text-emerald-400">{t("prop.trends.growth")}</span>
                        </div>
                      </div>
                   </div>
 
                   {/* Absolute Zero Base Graph Representation */}
                   <div className="absolute top-1/2 left-0 w-full h-px bg-white/10" />
-                  <svg className="w-full h-[60%] md:h-48 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] mt-8" preserveAspectRatio="none" viewBox="0 0 100 100">
-                    <path d="M0,95 L100,95" fill="none" stroke="#3B82F6" strokeWidth="1" />
-                    <path d="M0,97 L100,97" fill="none" stroke="#FF385C" strokeWidth="0.5" strokeDasharray="2,2" />
-                  </svg>
+                  <svg className="w-full h-[60%] md:h-48 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] mt-8" preserveAspectRatio="none" viewBox="0 0 100 100" suppressHydrationWarning><path d="M0,95 L100,95" fill="none" stroke="#3B82F6" strokeWidth="1" /><path d="M0,97 L100,97" fill="none" stroke="#FF385C" strokeWidth="0.5" strokeDasharray="2,2" /></svg>
                   
                   {/* Timeline X-Axis */}
                   <div className="hidden md:flex justify-between text-[8px] font-black uppercase tracking-widest text-zinc-600 mt-4 px-2">
@@ -144,8 +141,8 @@ export function PropertyModule() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
                <BottomKpiCard icon={CalendarCheck} label={t("prop.bottom.bookings")} value="0" trend="+14%" trendColor="text-emerald-400" />
                <BottomKpiCard icon={TrendingUp} label={t("prop.bottom.forecast")} value="$0" trend="+5%" trendColor="text-emerald-400" />
-               <BottomKpiCard icon={ShieldCheck} label={t("prop.bottom.integrity")} value="99.8%" trend="Stable" trendColor="text-zinc-400" />
-               <BottomKpiCard icon={Wrench} label={t("prop.bottom.maint")} value="0" trend="Alerts: 0" trendColor="text-[#3B82F6]" />
+               <BottomKpiCard icon={ShieldCheck} label={t("prop.bottom.integrity")} value="99.8%" trend={t("prop.bottom.stable")} trendColor="text-zinc-400" />
+               <BottomKpiCard icon={Wrench} label={t("prop.bottom.maint")} value="0" trend={t("prop.bottom.alerts")} trendColor="text-[#3B82F6]" />
             </div>
 
           </motion.div>
@@ -162,7 +159,7 @@ export function PropertyModule() {
         )}
         {activeSubTab === "LISTINGS" && (
           <motion.div key="listings" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-            <ListingsSubView onOpenWizard={() => setIsWizardOpen(true)} />
+            <ListingsSubView onOpenWizard={() => setIsWizardOpen(true)} t={t} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -236,7 +233,7 @@ function BottomKpiCard({ icon: Icon, label, value, trend, trendColor }: any) {
 // -------------------------------------------------------------
 function CalendarSubView({ t }: { t: any }) {
   const [viewMode, setViewMode] = useState<"MONTH" | "YEAR">("MONTH");
-  const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const daysOfWeek = t("prop.cal.days").split(",");
   
   // Dummy generate 31 days
   const dummyDays = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -250,7 +247,7 @@ function CalendarSubView({ t }: { t: any }) {
             <button className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition">
               <ChevronLeft size={16} className="text-white" />
             </button>
-            <span className="text-xs font-black text-white px-2">March 2026</span>
+            <span className="text-xs font-black text-white px-2">{t("prop.cal.months").split(",")[2]} 2026</span>
             <button className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition">
               <ChevronRight size={16} className="text-white" />
             </button>
@@ -280,7 +277,7 @@ function CalendarSubView({ t }: { t: any }) {
       {viewMode === "MONTH" ? (
         <div className="glass rounded-4xl border-white/5 overflow-hidden">
           <div className="grid grid-cols-7 border-b border-white/5 bg-white/2">
-            {daysOfWeek.map(d => (
+            {daysOfWeek.map((d: string) => (
               <div key={d} className="py-4 text-center text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 border-r border-white/5 last:border-r-0">
                 {d}
               </div>
@@ -303,11 +300,11 @@ function CalendarSubView({ t }: { t: any }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
            {/* Annual Grid Placeholders */}
-           {["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"].map((month, idx) => (
+           {t("prop.cal.months").split(",").map((month: string, idx: number) => (
              <div key={month} className="glass p-6 rounded-4xl border-white/5">
                 <h5 className={clsx("text-[10px] font-black uppercase tracking-widest mb-4", idx === 2 ? "text-[#FF385C]" : "text-white")}>{month} <span className="text-zinc-600">2026</span></h5>
                 <div className="grid grid-cols-7 gap-y-2 text-center text-[7px] font-bold text-zinc-600">
-                  {daysOfWeek.map(d => <span key={d} className="text-zinc-700">{d[0]}</span>)}
+                  {daysOfWeek.map((d: string) => <span key={d} className="text-zinc-700">{d[0]}</span>)}
                   {Array.from({length: 31}, (_, i) => (
                     <span key={i} className={clsx("py-1", month === "MARCH" && i === 22 ? "bg-[#FF385C] text-white rounded-full" : "text-zinc-500")}>{i + 1}</span>
                   ))}
@@ -376,7 +373,7 @@ function BookingsSubView({ t }: { t: any }) {
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center space-x-3">
               <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 font-institutional">{t("prop.book.awaiting")}</h5>
-              <span className="bg-[#FF385C]/10 text-[#FF385C] border border-[#FF385C]/20 px-2 py-0.5 rounded-full text-[8px] font-bold">0 Total</span>
+              <span className="bg-[#FF385C]/10 text-[#FF385C] border border-[#FF385C]/20 px-2 py-0.5 rounded-full text-[8px] font-bold">{t("prop.book.total")}</span>
             </div>
             <button className="bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-white text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-full flex items-center shadow-[0_0_15px_rgba(59,130,246,0.3)] transition">
                <Plus size={12} className="mr-2" /> {t("prop.book.new")}
@@ -402,12 +399,12 @@ function BookingsSubView({ t }: { t: any }) {
              {/* Empty State */}
              <div className="text-center relative z-10">
                <Filter size={40} className="mx-auto text-zinc-800 mb-6" />
-               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 font-institutional">NO MATCHING BOOKINGS FOUND</p>
+               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 font-institutional">{t("prop.book.noMatch")}</p>
              </div>
           </div>
           
           <div className="flex items-center justify-between mt-6">
-            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600">DISPLAYING 0 TO 0 OF 0 ENTRIES</span>
+            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600">{t("prop.book.display")}</span>
             <div className="flex space-x-2">
                <button className="w-6 h-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center"><ChevronLeft size={10} className="text-zinc-500" /></button>
                <button className="w-6 h-6 rounded-md bg-[#FF385C] flex items-center justify-center text-[9px] font-black text-white shadow-lg">1</button>
@@ -421,7 +418,7 @@ function BookingsSubView({ t }: { t: any }) {
            <div>
              <div className="flex justify-between items-center mb-6">
                <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">{t("prop.book.process")}</h5>
-               <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[8px] font-bold">0 Pending</span>
+               <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[8px] font-bold">{t("prop.book.pending")}</span>
              </div>
              
              <div className="flex-1 flex items-center justify-center min-h-[300px]">
@@ -437,8 +434,8 @@ function BookingsSubView({ t }: { t: any }) {
            <div className="bg-[#FF385C]/5 border border-[#FF385C]/10 rounded-2xl p-4 mt-8 flex items-start space-x-3">
              <div className="w-2 h-2 rounded-full bg-[#FF385C] mt-1 shadow-[0_0_10px_rgba(255,56,92,0.8)]" />
              <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
-               Ledger Mode: Filters are persistent. Multi-select enabled for bulk settlements.
-             </p>
+                {t("prop.book.ledgerMode")}
+              </p>
            </div>
         </div>
         
@@ -450,30 +447,30 @@ function BookingsSubView({ t }: { t: any }) {
 // -------------------------------------------------------------
 // Listings Sub-View
 // -------------------------------------------------------------
-function ListingsSubView({ onOpenWizard }: { onOpenWizard: () => void }) {
+function ListingsSubView({ onOpenWizard, t }: { onOpenWizard: () => void, t: any }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-6">
         <div className="w-full md:w-1/2 glass p-6 rounded-4xl border-white/5 bg-[#080808] flex justify-between items-center">
            <div>
-             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">TOTAL REVENUE</span>
-             <p className="text-4xl font-black text-[#10b981] tracking-tighter">$72,400</p>
+             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t("prop.list.revenue")}</span>
+             <p className="text-4xl font-black text-[#10b981] tracking-tighter">$0</p>
            </div>
-           <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[8px] font-bold">+12%</span>
+           <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[8px] font-bold">0%</span>
         </div>
         <div className="w-full md:w-1/4 glass p-6 rounded-4xl border-white/5 bg-[#080808] flex justify-between items-center">
            <div>
-             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">OCCUPANCY</span>
-             <p className="text-4xl font-black text-[#3B82F6] tracking-tighter">84%</p>
+             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t("prop.list.occupancy")}</span>
+             <p className="text-4xl font-black text-[#3B82F6] tracking-tighter">0%</p>
            </div>
-           <span className="bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20 px-2 py-0.5 rounded-full text-[8px] font-bold">+3%</span>
+           <span className="bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20 px-2 py-0.5 rounded-full text-[8px] font-bold">0%</span>
         </div>
         <div className="w-full md:w-1/4 glass p-6 rounded-4xl border-white/5 bg-[#080808] flex justify-between items-start">
            <div>
-             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">ACTIVE ASSETS</span>
+             <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t("prop.list.assets")}</span>
              <p className="text-4xl font-black text-[#FF385C] tracking-tighter">0</p>
            </div>
-           <span className="text-[8px] font-black tracking-widest px-2 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400">Stable</span>
+           <span className="text-[8px] font-black tracking-widest px-2 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400">{t("prop.list.stable")}</span>
         </div>
       </div>
 
@@ -483,24 +480,24 @@ function ListingsSubView({ onOpenWizard }: { onOpenWizard: () => void }) {
              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                <Filter size={12} className="text-zinc-500" />
              </div>
-             <input type="text" placeholder="Search assets by name or ID..." className="w-full bg-[#0A0A0A] border border-white/5 rounded-full py-3 pl-10 pr-4 text-xs text-white outline-none focus:border-white/20 transition-all font-bold" />
+             <input type="text" placeholder={t("prop.list.search")} className="w-full bg-[#0A0A0A] border border-white/5 rounded-full py-3 pl-10 pr-4 text-xs text-white outline-none focus:border-white/20 transition-all font-bold" />
           </div>
           <div className="flex space-x-4">
             <button className="bg-[#0A0A0A] border border-white/5 text-zinc-400 text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full hover:bg-white/5 transition flex items-center">
-               <Filter size={12} className="mr-2" /> FILTER
+               <Filter size={12} className="mr-2" /> {t("prop.list.filter")}
             </button>
             <button 
               onClick={onOpenWizard}
               className="bg-[#FF385C] hover:bg-[#FF385C]/90 text-white text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full flex items-center shadow-[0_0_15px_rgba(255,56,92,0.4)] transition"
             >
-               <Plus size={12} className="mr-2" /> ADD ASSET
+               <Plus size={12} className="mr-2" /> {t("prop.list.add")}
             </button>
           </div>
         </div>
 
         <div className="flex-1 flex items-center justify-center">
            <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] font-institutional text-center italic">
-             No portfolio assets registered. Use 'Add Asset' to initialize management.
+             {t("prop.list.empty")}
            </p>
         </div>
       </div>

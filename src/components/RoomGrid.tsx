@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useAura, RoomStatus } from "@/context/AuraContext";
+import { useI18n } from "@/context/I18nContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bed, CheckCircle2, AlertCircle, Clock, Hammer, Trash2, Plus } from "lucide-react";
 import { AddRoomModal } from "./Onboarding/AddRoomModal";
@@ -15,6 +16,7 @@ const statusConfig: Record<RoomStatus, { color: string, icon: any }> = {
 
 export function RoomGrid() {
   const { rooms, toggleRoomStatus, deleteRoom, role } = useAura();
+  const { t } = useI18n();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   const canManage = role === "ADMIN" || role === "GERENTE";
@@ -36,15 +38,15 @@ export function RoomGrid() {
               exit={{ opacity: 0, scale: 0.9 }}
               whileHover={{ y: -5 }}
               onClick={() => toggleRoomStatus(room.id)}
-              className="glass p-6 rounded-[2.5rem] cursor-pointer group transition-all duration-500 border-white/5 bg-white/1 hover:border-[#FF385C]/20"
+              className="glass p-6 rounded-[2.5rem] cursor-pointer group transition-all duration-500 border-white/5 bg-white/1 hover:border-primary/20 relative"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className={`p-4 rounded-2xl ${config.color} border border-white/5`}>
                   <config.icon size={24} />
                 </div>
-                <div className="text-right">
-                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] block mb-1 font-institutional">Housing Unit</span>
-                  <span className="text-2xl font-black text-white group-hover:text-[#FF385C] transition-colors leading-none tracking-tighter">#{room.number}</span>
+                 <div className="text-right">
+                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.3em] block mb-1 font-institutional">{t("room.unit")}</span>
+                  <span className="text-2xl font-black text-white group-hover:text-primary transition-colors leading-none tracking-tighter">#{room.number}</span>
                 </div>
               </div>
               
@@ -55,9 +57,9 @@ export function RoomGrid() {
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-border flex justify-between items-center text-[10px] text-muted font-bold uppercase tracking-wider">
-                <span>Última Limpieza</span>
-                <span className="text-foreground">Hace 2h</span>
+               <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                <span>{t("room.lastClean")}</span>
+                <span className="text-white font-black">{t("room.cleanTime")}</span>
               </div>
 
               {/* Delete Button - Overlay on Hover */}
@@ -90,8 +92,8 @@ export function RoomGrid() {
               <Plus className="text-muted group-hover:text-primary transition-colors" size={32} />
             </div>
             <div>
-              <h4 className="font-bold text-foreground">Nueva Habitación</h4>
-              <p className="text-[10px] text-muted font-bold uppercase tracking-widest mt-1">Agregar manualmente</p>
+              <h4 className="font-black text-white font-institutional uppercase tracking-tight">{t("room.new")}</h4>
+              <p className="text-[10px] text-zinc-600 font-black uppercase tracking-widest mt-1 font-institutional">{t("room.manual")}</p>
             </div>
           </motion.div>
         )}

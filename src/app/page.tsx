@@ -55,8 +55,8 @@ function StatCard({ title, value, change, icon: Icon, trend }: { title: string, 
       </div>
       
       <div className="flex justify-between items-start relative z-10">
-        <div className={`p-4 rounded-2xl bg-white/5 border border-white/5 transition-transform group-hover:bg-[#FF385C]/10 group-hover:border-[#FF385C]/20`}>
-          <Icon size={24} className="text-white group-hover:text-[#FF385C] transition-colors" />
+        <div className={`p-4 rounded-2xl bg-white/5 border border-white/5 transition-transform group-hover:bg-primary/10 group-hover:border-primary/20`}>
+          <Icon size={24} className="text-white group-hover:text-primary transition-colors" />
         </div>
         <div className={clsx(
           "flex items-center px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase",
@@ -93,24 +93,24 @@ function DashboardHome() {
           className="relative z-10"
         >
           <div className="flex items-center space-x-2 mb-6">
-            <span className="w-2 h-2 rounded-full bg-[#FF385C] shadow-[0_0_10px_#FF385C]" />
-            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] font-institutional">Operations Center</span>
+            <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]" />
+            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] font-institutional">{t("dash.op.center")}</span>
           </div>
           <h1 className="text-6xl font-black tracking-tighter text-white mb-4 leading-[0.9]">
-            Aura <span className="text-gradient-red">Institutional</span>
+            Aura <span className="text-gradient-red">{t("dash.aura.inst")}</span>
           </h1>
           <p className="text-zinc-500 text-sm font-medium tracking-tight max-w-lg">
-            Standardizing hospitality excellence across your property portfolio. Complete control, total transparency.
+            {t("dash.hero.desc")}
           </p>
         </motion.div>
       </div>
 
       {/* Stats Grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-        <StatCard title={t("dash.occupancy.title")} value={`${occupancyRate}%`} change="+4.2%" trend="up" icon={Bed} />
-        <StatCard title={t("dash.revpar.title")} value="$240" change="+12%" trend="up" icon={CreditCard} />
+        <StatCard title={t("dash.occupancy.title")} value={`${occupancyRate}%`} change="0%" trend="neutral" icon={Bed} />
+        <StatCard title={t("dash.revpar.title")} value="$0" change="0%" trend="neutral" icon={CreditCard} />
         <StatCard title={t("dash.checkin.title")} value={`${reservations.length}`} change={t("dash.stable")} trend="neutral" icon={CheckCircle2} />
-        <StatCard title={t("dash.tasks.title")} value="12" change="+3" trend="down" icon={Clock} />
+        <StatCard title={t("dash.tasks.title")} value="0" change="0" trend="neutral" icon={Clock} />
       </section>
 
       {/* Main Content Areas */}
@@ -129,12 +129,12 @@ function DashboardHome() {
           <div className="glass p-2 rounded-[2.5rem] border-white/5 bg-white/1">
             {rooms.length > 0 ? <RoomGrid /> : (
               <div className="p-32 text-center">
-                <div className="w-24 h-24 bg-white/5 rounded-[40px] flex items-center justify-center mx-auto mb-10 border border-white/10">
-                  <Sparkles className="text-[#FF385C]" size={40} />
+                <div className="w-24 h-24 bg-white/5 rounded-[40px] flex items-center justify-center mx-auto mb-10 border border-white/10 group">
+                  <Sparkles className="text-primary group-hover:scale-110 transition-transform" size={40} />
                 </div>
                 <h4 className="text-white font-black text-2xl mb-3 tracking-tighter font-institutional uppercase">{t("empty.title")}</h4>
                 <p className="text-zinc-500 text-sm max-w-md mx-auto font-medium">{t("empty.desc")}</p>
-                <button className="mt-12 bg-white text-black font-black text-[10px] px-10 py-5 rounded-4xl uppercase tracking-[0.3em] hover:bg-[#FF385C] hover:text-white transition-all shadow-2xl font-institutional">
+                <button className="mt-12 bg-white text-black font-black text-[10px] px-10 py-5 rounded-4xl uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all shadow-2xl font-institutional">
                   {t("empty.button")}
                 </button>
               </div>

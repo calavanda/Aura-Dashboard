@@ -11,9 +11,11 @@ import {
   BarChart3
 } from "lucide-react";
 import { useAura } from "@/context/AuraContext";
+import { useI18n } from "@/context/I18nContext";
 
 export function FinanceModule() {
   const { reservations } = useAura();
+  const { t } = useI18n();
 
   const paidReservations = reservations.filter(r => r.paymentStatus === "PAGADO");
   const totalRevenue = paidReservations.reduce((acc, r) => acc + (r.amount || 0), 0);
@@ -22,17 +24,17 @@ export function FinanceModule() {
     .reduce((acc, r) => acc + (r.amount || 0), 0);
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto px-4 md:px-0">
       <div className="flex justify-between items-end">
         <div>
-          <h3 className="text-3xl font-bold font-outfit text-foreground tracking-tight">Finanzas</h3>
-          <p className="text-muted text-sm mt-2">Control de ingresos y estados de pago.</p>
+          <h3 className="text-4xl font-black font-institutional text-white tracking-tighter uppercase">{t("fin.title")}</h3>
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] font-institutional mt-3">{t("fin.subtitle")}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <FinanceCard 
-          title="Ingresos Totales" 
+          title={t("fin.total")} 
           value={`$${totalRevenue.toLocaleString()}`} 
           trend="+12.5%" 
           positive={true}
@@ -41,7 +43,7 @@ export function FinanceModule() {
           bg="bg-emerald-500/10"
         />
         <FinanceCard 
-          title="Pagos Pendientes" 
+          title={t("fin.pending")} 
           value={`$${pendingRevenue.toLocaleString()}`} 
           trend="+5.2%" 
           positive={false}
@@ -50,7 +52,7 @@ export function FinanceModule() {
           bg="bg-amber-500/10"
         />
         <FinanceCard 
-          title="Ticket Promedio" 
+          title={t("fin.average")} 
           value={`$${(paidReservations.length > 0 ? totalRevenue / paidReservations.length : 0).toLocaleString()}`} 
           trend="+2.1%" 
           positive={true}
@@ -61,10 +63,10 @@ export function FinanceModule() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="glass p-8 rounded-[40px] space-y-6">
-          <h4 className="text-lg font-bold font-outfit flex items-center gap-2">
-            <BarChart3 size={20} className="text-primary" />
-            Últimas Transacciones
+        <div className="glass p-8 rounded-[40px] border-white/5 space-y-8">
+          <h4 className="text-xs font-black uppercase tracking-[0.3em] font-institutional flex items-center gap-3 text-white">
+            <BarChart3 size={18} className="text-primary" />
+            {t("fin.transactions")}
           </h4>
           
           <div className="space-y-4">
@@ -87,21 +89,21 @@ export function FinanceModule() {
                 </div>
               ))
             ) : (
-              <p className="text-center py-12 text-muted text-sm italic">No hay transacciones completadas aún.</p>
+              <p className="text-center py-12 text-zinc-500 text-xs italic font-medium">{t("fin.noTrans")}</p>
             )}
           </div>
         </div>
 
-        <div className="glass p-8 rounded-[40px] bg-linear-to-br from-primary/5 to-transparent border-primary/10 flex flex-col justify-center items-center text-center">
-          <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6">
-            <TrendingUp size={40} className="text-primary" />
+        <div className="glass p-12 rounded-[40px] bg-primary/2 border-primary/10 flex flex-col justify-center items-center text-center">
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-8 border border-primary/20">
+            <TrendingUp size={36} className="text-primary shadow-[0_0_20px_rgba(255,56,92,0.3)]" />
           </div>
-          <h4 className="text-2xl font-bold font-outfit text-foreground mb-4">Proyecciones Aura</h4>
-          <p className="text-muted text-sm max-w-xs transition-all">
-            Tu hotel está generando un flujo constante. Con el ritmo actual, podrías cerrar el mes con un incremento del **8%** en comparación al anterior.
+          <h4 className="text-2xl font-black font-institutional text-white mb-4 uppercase tracking-tighter">{t("fin.projections")}</h4>
+          <p className="text-zinc-500 text-xs max-w-xs transition-all leading-relaxed font-medium">
+            {t("fin.forecast")}
           </p>
-          <button className="mt-8 px-8 py-3 bg-primary text-background font-bold text-xs rounded-2xl hover:brightness-110 active:scale-95 transition-all uppercase tracking-widest">
-            Descargar Reporte PDF
+          <button className="mt-10 px-10 py-4 bg-primary text-white font-black text-[10px] rounded-2xl hover:scale-[1.05] active:scale-95 transition-all uppercase tracking-[0.2em] font-institutional shadow-2xl shadow-primary/20">
+            {t("fin.download")}
           </button>
         </div>
       </div>

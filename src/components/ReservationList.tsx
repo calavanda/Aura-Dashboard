@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import { useAura } from "@/context/AuraContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, ChevronRight, User } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 export function ReservationList() {
   const { reservations } = useAura();
+  const { t } = useI18n();
   const [filter, setFilter] = useState("");
 
   const filtered = reservations.filter(r => 
@@ -18,15 +20,15 @@ export function ReservationList() {
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row justify-between items-end gap-6 px-2">
         <div>
-          <h3 className="text-4xl font-black tracking-tighter text-white">Guest Index</h3>
-          <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.4em] font-institutional mt-3">Active Pipeline Monitoring</p>
+          <h3 className="text-4xl font-black tracking-tighter text-white">{t("res.title")}</h3>
+          <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.4em] font-institutional mt-3">{t("res.subtitle")}</p>
         </div>
         <div className="flex items-center space-x-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-80">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
             <input 
               type="text" 
-              placeholder="Buscar por nombre o habitación..." 
+              placeholder={t("res.search")} 
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               className="w-full bg-accent border border-border rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all"
@@ -43,12 +45,12 @@ export function ReservationList() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-white/5 bg-white/2 text-zinc-600 font-black uppercase text-[9px] tracking-[0.3em] font-institutional">
-                <th className="px-10 py-8">Patron</th>
-                <th className="px-10 py-8">Asset</th>
-                <th className="px-10 py-8">Status</th>
-                <th className="px-10 py-8">Payment</th>
-                <th className="px-10 py-8 text-right">Volume</th>
-                <th className="px-10 py-8 text-right">Scope</th>
+                <th className="px-10 py-8">{t("res.th.patron")}</th>
+                <th className="px-10 py-8">{t("res.th.asset")}</th>
+                <th className="px-10 py-8">{t("res.th.status")}</th>
+                <th className="px-10 py-8">{t("res.th.payment")}</th>
+                <th className="px-10 py-8 text-right">{t("res.th.volume")}</th>
+                <th className="px-10 py-8 text-right">{t("res.th.scope")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -91,7 +93,7 @@ export function ReservationList() {
                         </span>
                         {res.paymentProvider && res.paymentProvider !== 'NINGUNO' && (
                           <span className="text-[9px] text-muted uppercase font-bold tracking-tighter">
-                            vía {res.paymentProvider}
+                            {t("res.via")} {res.paymentProvider}
                           </span>
                         )}
                       </div>
@@ -113,7 +115,7 @@ export function ReservationList() {
         {filtered.length === 0 && (
           <div className="p-20 text-center">
             <User size={48} className="mx-auto text-muted/20 mb-4" />
-            <p className="text-muted font-medium">No se encontraron reservaciones con ese nombre.</p>
+            <p className="text-muted font-medium">{t("res.empty")}</p>
           </div>
         )}
       </div>

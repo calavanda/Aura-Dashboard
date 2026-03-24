@@ -13,9 +13,11 @@ import {
   UserCheck
 } from "lucide-react";
 import { useAura } from "@/context/AuraContext";
+import { useI18n } from "@/context/I18nContext";
 
 export function GuestModule() {
   const { reservations } = useAura();
+  const { t } = useI18n();
 
   // Group reservations by guest name to simulate a "Guest" entity
   const guests = useMemo(() => {
@@ -48,18 +50,18 @@ export function GuestModule() {
   }, [reservations]);
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto px-4 md:px-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h3 className="text-3xl font-bold font-outfit text-foreground tracking-tight">Huéspedes</h3>
-          <p className="text-muted text-sm mt-2">Base de datos de clientes y fidelización.</p>
+          <h3 className="text-4xl font-black font-institutional text-white tracking-tighter uppercase">{t("guest.title")}</h3>
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] font-institutional mt-3">{t("guest.subtitle")}</p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />
             <input 
               type="text" 
-              placeholder="Buscar huésped..." 
+              placeholder={t("guest.search")} 
               className="w-full bg-accent/50 border border-border rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
           </div>
@@ -91,17 +93,17 @@ export function GuestModule() {
               <div className="flex-1 text-center md:text-left">
                 <h4 className="text-xl font-bold font-outfit">{guest.name}</h4>
                 <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-2">
-                  <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
-                    <Calendar size={14} className="text-primary" />
-                    Última visita: {new Date(guest.lastStay).toLocaleDateString()}
+                  <div className="flex items-center gap-1.5 text-[9px] text-zinc-500 font-bold uppercase tracking-widest">
+                    <Calendar size={12} className="text-primary" />
+                    {t("guest.lastVisit")}: {new Date(guest.lastStay).toLocaleDateString()}
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
-                    <UserCheck size={14} className="text-primary" />
-                    Estancias: {guest.stayCount}
+                  <div className="flex items-center gap-1.5 text-[9px] text-zinc-500 font-bold uppercase tracking-widest">
+                    <UserCheck size={12} className="text-primary" />
+                    {t("guest.stays")}: {guest.stayCount}
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
-                    <CreditCard size={14} className="text-primary" />
-                    Total invertido: ${guest.totalSpent.toLocaleString()}
+                  <div className="flex items-center gap-1.5 text-[9px] text-zinc-500 font-bold uppercase tracking-widest">
+                    <CreditCard size={12} className="text-primary" />
+                    {t("guest.spent")}: ${guest.totalSpent.toLocaleString()}
                   </div>
                 </div>
               </div>
@@ -117,13 +119,13 @@ export function GuestModule() {
             </motion.div>
           ))
         ) : (
-          <div className="glass p-20 rounded-[40px] text-center space-y-4">
-            <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto text-muted">
+          <div className="glass p-32 rounded-[40px] border-white/5 text-center space-y-4">
+            <div className="w-24 h-24 bg-white/5 rounded-[40px] flex items-center justify-center mx-auto text-zinc-600 mb-8 border border-white/10">
               <Users size={40} />
             </div>
-            <h4 className="text-xl font-bold font-outfit">Sin huéspedes aún</h4>
-            <p className="text-muted text-sm max-w-xs mx-auto">
-              Cuando los clientes comiencen a reservar desde Aura Web o el Dashboard, aparecerán aquí.
+            <h4 className="text-2xl font-black font-institutional text-white uppercase tracking-tighter">{t("guest.empty")}</h4>
+            <p className="text-zinc-500 text-sm max-w-xs mx-auto font-medium">
+              {t("guest.emptyDesc")}
             </p>
           </div>
         )}

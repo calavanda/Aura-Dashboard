@@ -9,7 +9,11 @@ import {
   getHotelData,
   checkOrCreateUserAction,
   purgeHotelDataAction,
-  updateHotelAction
+  updateHotelAction,
+  updateRoomStatusAction,
+  updateRoomAction,
+  addReservationAction,
+  validateMasterKeyAction
 } from "@/app/actions/aura";
 
 export type RoomStatus = "Sucia" | "Limpia" | "Ocupada" | "Mantenimiento";
@@ -63,7 +67,7 @@ interface AuraContextType {
   logs: any[];
   refreshData: () => Promise<void>;
   updateHotel: (data: { name?: string, type?: string, logoUrl?: string }) => Promise<{ success: boolean, error?: string }>;
-  addRoom: (room: { number: string, type: string }) => Promise<{ success: boolean, error?: string }>;
+  addRoom: (room: { number: string, type: string, status?: RoomStatus }) => Promise<{ success: boolean, error?: string }>;
   applyMasterKey: (key: string) => Promise<{ success: boolean, error?: string }>;
   updateRoom: (id: string, room: Partial<Room>) => void;
   deleteRoom: (id: string) => Promise<void>;
@@ -111,11 +115,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
           setRooms(result.rooms as any || []);
           setReservations(result.reservations as any || []);
           setLogs(result.logs as any || []);
-          // Owner Bypass Logic
-          const ownerEmails = ["itslacia@gmail.com", "22610282@utgz.edu.mx", "ninguang.01@gmail.com"];
-          const userEmail = result.user?.email || "";
-          const isOwnerUser = ownerEmails.includes(userEmail);
-          
+          const isOwnerUser = result.isOwner || false;
           setIsOwner(isOwnerUser);
           const hotel = result.hotel as any;
           setSubscription(isOwnerUser ? "ENTERPRISE" : (hotel.subscription || "BASIC"));
@@ -135,8 +135,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     hydrate();
   }, [user]);
 
-  const addRoom = async (roomData: { number: string, type: string }) => {
-    const result = await addRoomAction(hotelId!, roomData.number, roomData.type);
+  const addRoom = async (roomData: { number: string, type: string, status?: RoomStatus }) => {
+    const result = await addRoomAction(hotelId!, roomData.number, roomData.type, roomData.status);
     if (result.success && result.room) {
       setRooms(prev => [...prev, result.room as any]);
       return { success: true };
@@ -155,18 +155,21 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const applyMasterKey = async (key: string) => {
-    if (key === "AURA-OWNER-2026") {
-        // En un caso real, esto llamaría a una acción del servidor para actualizar la DB
-        // Por ahora, simulamos el éxito local y el usuario ya tiene bypass por email
+    if (!hotelId) return { success: false, error: "No hotel identified" };
+    const res = await validateMasterKeyAction(hotelId, key);
+    if (res.success) {
         setSubscription("ENTERPRISE");
         localStorage.setItem("aura_master_unlocked", "true");
         return { success: true };
     }
-    return { success: false, error: "Clave de licencia inválida" };
+    return res;
   };
 
-  const updateRoom = (id: string, updates: Partial<Room>) => {
-    setRooms(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+  const updateRoom = async (id: string, updates: Partial<Room>) => {
+    const res = await updateRoomAction(id, updates);
+    if (res.success) {
+      setRooms(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+    }
   };
 
   const deleteRoom = async (id: string) => {
@@ -176,25 +179,43 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const clearRooms = () => setRooms([]);
-
-  const toggleRoomStatus = (id: string) => {
-    setRooms(prev => prev.map(room => {
-      if (room.id === id) {
-        const nextStatus: Record<RoomStatus, RoomStatus> = {
-          "Sucia": "Limpia",
-          "Limpia": "Ocupada",
-          "Ocupada": "Sucia",
-          "Mantenimiento": "Limpia"
-        };
-        return { ...room, status: nextStatus[room.status] };
-      }
-      return room;
-    }));
+  const clearRooms = async () => {
+    if (!hotelId) return;
+    const res = await purgeHotelDataAction(hotelId, "ALL"); // Purge all will include rooms if I update the action
+    if (res.success) {
+      setRooms([]);
+      setReservations([]);
+      setLogs([]);
+    }
   };
 
-  const addReservation = (res: Omit<Reservation, "id">) => {
-    setReservations(prev => [...prev, { ...res, id: Math.random().toString(36).substr(2, 9) }]);
+  const toggleRoomStatus = async (id: string) => {
+    const room = rooms.find(r => r.id === id);
+    if (!room) return;
+
+    const nextStatus: Record<RoomStatus, RoomStatus> = {
+      "Sucia": "Limpia",
+      "Limpia": "Ocupada",
+      "Ocupada": "Sucia",
+      "Mantenimiento": "Limpia"
+    };
+    const newStatus = nextStatus[room.status];
+    
+    const res = await updateRoomStatusAction(id, newStatus);
+    if (res.success) {
+      setRooms(prev => prev.map(room => room.id === id ? { ...room, status: newStatus } : room));
+    }
+  };
+
+  const addReservation = async (resData: Omit<Reservation, "id">) => {
+    if (!hotelId) return;
+    const result = await addReservationAction(hotelId, {
+      ...resData,
+      checkIn: resData.checkIn // Already ISO string from UI usually
+    });
+    if (result.success && result.reservation) {
+      setReservations(prev => [result.reservation as any, ...prev]);
+    }
   };
 
   const purgeData = async (type: "RESERVATIONS" | "LOGS" | "ALL") => {
@@ -232,9 +253,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
         setRooms(result.rooms as any || []);
         setReservations(result.reservations as any || []);
         setLogs(result.logs as any || []);
-        const ownerEmails = ["itslacia@gmail.com", "22610282@utgz.edu.mx", "ninguang.01@gmail.com"];
-        const isOwnerUser = ownerEmails.includes(result.user?.email || "");
         
+        const isOwnerUser = result.isOwner || false;
         setIsOwner(isOwnerUser);
         const hotel = result.hotel as any;
         setSubscription(isOwnerUser ? "ENTERPRISE" : (hotel.subscription || "BASIC"));

@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { HotelConfig, Room } from "@/context/AuraContext";
+import { HotelConfig, Room, RoomStatus } from "@/context/AuraContext";
 import { revalidatePath } from "next/cache";
 
 export async function createHotelWithRooms(config: HotelConfig, clerkId: string) {
@@ -50,7 +50,7 @@ export async function updateHotelAction(hotelId: string, data: { name?: string, 
   }
 }
 
-export async function addRoomAction(hotelId: string, roomNumber: string, roomType: string, clerkId?: string) {
+export async function addRoomAction(hotelId: string, roomNumber: string, roomType: string, status?: RoomStatus, clerkId?: string) {
   try {
     const hotel = await prisma.hotel.findUnique({
       where: { id: hotelId },
@@ -65,7 +65,7 @@ export async function addRoomAction(hotelId: string, roomNumber: string, roomTyp
       data: {
         number: roomNumber,
         type: roomType,
-        status: "Limpia", // Default
+        status: status || "Limpia", // Default if not provided
         hotelId: hotelId,
       }
     });
@@ -135,6 +135,7 @@ export async function getHotelData(clerkId: string) {
       rooms: user.hotel.rooms,
       reservations: user.hotel.reservations,
       logs: allLogs,
+      isOwner: (process.env.AURA_OWNER_EMAILS || "").split(",").includes(user.email)
     };
   } catch (error) {
     console.error("Error fetching hotel data:", error);
@@ -176,10 +177,16 @@ export async function createAuditLog(clerkId: string, action: string, details?: 
   }
 }
 
-export async function purgeHotelDataAction(hotelId: string, type: "RESERVATIONS" | "LOGS" | "ALL") {
+export async function purgeHotelDataAction(hotelId: string, type: "RESERVATIONS" | "LOGS" | "ROOMS" | "ALL") {
   try {
     if (type === "RESERVATIONS" || type === "ALL") {
       await prisma.reservation.deleteMany({
+        where: { hotelId: hotelId }
+      });
+    }
+
+    if (type === "ROOMS" || type === "ALL") {
+      await prisma.room.deleteMany({
         where: { hotelId: hotelId }
       });
     }
@@ -204,6 +211,88 @@ export async function purgeHotelDataAction(hotelId: string, type: "RESERVATIONS"
   } catch (error) {
     console.error("Error purging hotel data:", error);
     return { success: false, error: "Failed to purge data" };
+  }
+}
+
+export async function updateRoomStatusAction(roomId: string, status: string) {
+  try {
+    const updatedRoom = await prisma.room.update({
+      where: { id: roomId },
+      data: { status: status as any }
+    });
+    revalidatePath("/");
+    return { success: true, room: updatedRoom };
+  } catch (error) {
+    console.error("Error updating room status:", error);
+    return { success: false };
+  }
+}
+
+export async function updateRoomAction(roomId: string, data: Partial<{ number: string, type: string, status: string }>) {
+  try {
+    const updatedRoom = await prisma.room.update({
+      where: { id: roomId },
+      data: {
+        ...(data.number && { number: data.number }),
+        ...(data.type && { type: data.type }),
+        ...(data.status && { status: data.status as any }),
+      }
+    });
+    revalidatePath("/");
+    return { success: true, room: updatedRoom };
+  } catch (error) {
+    console.error("Error updating room:", error);
+    return { success: false };
+  }
+}
+
+export async function addReservationAction(hotelId: string, data: {
+  guestName: string,
+  roomNumber: string,
+  checkIn: string, // ISO string
+  status: string,
+  amount?: number,
+  paymentMethod?: string,
+  paymentStatus?: string,
+  paymentProvider?: string
+}) {
+  try {
+    const reservation = await prisma.reservation.create({
+      data: {
+        guestName: data.guestName,
+        roomNumber: data.roomNumber,
+        checkIn: new Date(data.checkIn),
+        status: data.status,
+        hotelId: hotelId,
+        amount: data.amount,
+        paymentMethod: (data.paymentMethod as any) || "EFECTIVO",
+        paymentStatus: (data.paymentStatus as any) || "PENDIENTE",
+        paymentProvider: (data.paymentProvider as any) || "NINGUNO"
+      }
+    });
+    revalidatePath("/");
+    return { success: true, reservation };
+  } catch (error) {
+    console.error("Error creating reservation:", error);
+    return { success: false };
+  }
+}
+
+export async function validateMasterKeyAction(hotelId: string, key: string) {
+  try {
+    const MASTER_KEY = process.env.AURA_MASTER_KEY || "AURA-OWNER-2026";
+    if (key === MASTER_KEY) {
+      await prisma.hotel.update({
+        where: { id: hotelId },
+        data: { subscription: "ENTERPRISE" }
+      });
+      revalidatePath("/");
+      return { success: true };
+    }
+    return { success: false, error: "Clave de licencia inválida" };
+  } catch (error) {
+    console.error("Error validating master key:", error);
+    return { success: false, error: "Server error" };
   }
 }
 
