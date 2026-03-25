@@ -56,4 +56,5 @@ export const auraPrisma = primaryPrisma.$extends({
   },
 });
 
+export const prisma = auraPrisma;
 export default auraPrisma;
