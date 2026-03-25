@@ -7,7 +7,6 @@ export async function logActivity(userId: string, action: string, details: strin
         userId,
         action,
         details,
-        ipAddress: "System", // Could be passed from request
       }
     });
   } catch (error) {
