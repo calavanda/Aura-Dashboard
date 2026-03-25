@@ -3,10 +3,10 @@ import prisma from "@/lib/prisma";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { hotelId: string } }
+  { params }: { params: Promise<{ hotelId: string }> }
 ) {
   try {
-    const { hotelId } = params;
+    const { hotelId } = await params;
     const body = await request.json();
     const { guestName, roomType, checkIn } = body;
 
