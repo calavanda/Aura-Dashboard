@@ -1,7 +1,7 @@
 export const es = {
   // AuthGate
   "auth.welcome": "BIENVENIDO",
-  "auth.back": "VOLVER",
+  "auth.back": "DE NUEVO",
   "auth.subtitle": "ACCEDE A TU CENTRO DE COMANDO",
   "auth.newToAura": "¿NUEVO EN AURA?",
   "auth.createAccount": "CREAR CUENTA",
