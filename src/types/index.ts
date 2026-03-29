@@ -1,7 +1,7 @@
 export type Role = "ADMIN" | "GERENTE" | "RESERVADOR";
 export type RoomStatus = "Limpia" | "Sucia" | "Ocupada" | "Mantenimiento";
 export type SubscriptionTier = "BASIC" | "PRO" | "ENTERPRISE";
-export type PaymentMethod = "EN_LINEA" | "EFECTIVO" | "CARGO_A_HABITACION";
+export type PaymentMethod = "EN_LINEA" | "EFECTIVO" | "CARGO_A_HABITACION" | "TERMINAL" | "TRANSFERENCIA";
 export type PaymentStatus = "PENDIENTE" | "PAGADO" | "FALLIDO" | "REEMBOLSADO";
 export type PaymentProvider = "STRIPE" | "PAYPAL" | "MERCADOPAGO" | "NINGUNO";
 
@@ -67,8 +67,18 @@ export interface MenuItem {
   name: string;
   description?: string | null;
   price: number;
+  cost?: number; // Calculated or injected from recipe
+  recipe?: MenuRecipeIngredient[];
   categoryId: string;
   available: boolean;
+}
+
+export interface MenuRecipeIngredient {
+  id: string;
+  menuItemId: string;
+  inventoryItemId: string;
+  inventoryItem?: InventoryItem;
+  quantityNeeded: number;
 }
 
 export interface Order {
@@ -100,6 +110,7 @@ export interface InventoryItem {
   unit: string;
   threshold: number;
   hotelId: string;
+  price: number;
   updatedAt: Date;
 }
 

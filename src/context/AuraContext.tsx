@@ -23,7 +23,9 @@ import {
   RoomStatus, 
   Role,
   AuditLog,
-  Hotel
+  Hotel,
+  InventoryItem,
+  Restaurant
 } from "@/types";
 
 export interface HotelConfig {
@@ -38,6 +40,8 @@ export interface HotelConfig {
 interface AuraContextType {
   rooms: Room[];
   reservations: Reservation[];
+  inventoryItems: InventoryItem[];
+  restaurants: Restaurant[];
   hotelConfig: HotelConfig | null;
   hotelId: string | null;
   isSetupComplete: boolean;
@@ -67,6 +71,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [hotelConfig, setHotelConfig] = useState<HotelConfig | null>(null);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [hotelId, setHotelId] = useState<string | null>(null);
@@ -97,6 +103,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
           });
           setRooms(result.rooms as Room[] || []);
           setReservations(result.reservations as Reservation[] || []);
+          setInventoryItems(result.inventory as InventoryItem[] || []);
+          setRestaurants(result.restaurants as Restaurant[] || []);
           setLogs(result.logs as AuditLog[] || []);
           const isOwnerUser = result.isOwner || false;
           setIsOwner(isOwnerUser);
@@ -253,6 +261,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
         });
         setRooms(result.rooms as Room[] || []);
         setReservations(result.reservations as Reservation[] || []);
+        setInventoryItems(result.inventory as InventoryItem[] || []);
+        setRestaurants(result.restaurants as Restaurant[] || []);
         setLogs(result.logs as AuditLog[] || []);
         
         const isOwnerUser = result.isOwner || false;
@@ -274,6 +284,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     <AuraContext.Provider value={{ 
       rooms, 
       reservations, 
+      inventoryItems,
+      restaurants,
       hotelConfig, 
       hotelId,
       isSetupComplete, 

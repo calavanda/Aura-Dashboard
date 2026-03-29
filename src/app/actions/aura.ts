@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Room, RoomStatus, PaymentMethod, PaymentStatus, PaymentProvider, AuditLog } from "@/types";
+import { RoomStatus, PaymentMethod, PaymentStatus, PaymentProvider, AuditLog } from "@/types";
 import { HotelConfig } from "@/context/AuraContext";
 import { revalidatePath } from "next/cache";
 
@@ -61,12 +61,13 @@ export async function addRoomAction(hotelId: string, roomNumber: string, roomTyp
       return { success: false, error: "Límite de 5 habitaciones alcanzado en el plan BASIC. Por favor, mejora tu plan." };
     }
 
-    const newRoom = await prisma.room.create({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const newRoom = await (prisma as any).room.create({
       data: {
         number: roomNumber,
         type: roomType,
         price: price || 0,
-        status: status || "Limpia", // Default if not provided
+        status: status || "Limpia",
         hotelId: hotelId,
       }
     });
@@ -93,7 +94,8 @@ export async function deleteRoomAction(roomId: string) {
 
 export async function getHotelData(clerkId: string) {
   try {
-    const user = await prisma.user.findUnique({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const user = await (prisma as any).user.findUnique({
       where: { clerkId },
       include: {
         hotel: {
@@ -109,19 +111,40 @@ export async function getHotelData(clerkId: string) {
                   take: 30
                 }
               }
+            },
+            inventory: true,
+            restaurants: {
+              include: {
+                categories: {
+                  include: {
+                    items: {
+                      include: {
+                        recipe: {
+                          include: {
+                            inventoryItem: true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
       }
-    }) as any; // Complex include needs a bit of flexibility or a very deep type
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }) as Record<string, any>;
 
     if (!user || !user.hotel) return { success: false, error: "No hotel found" };
 
     // Flatten logs from all users
-    const allLogs = user.hotel.users.flatMap((u: any) => u.logs.map((l: AuditLog) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const allLogs = user.hotel.users.flatMap((u: Record<string, any>) => u.logs.map((l: AuditLog) => ({
       ...l,
       userName: u.email.split('@')[0]
-    }))).sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 30);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }))).sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 30);
 
     return { 
       success: true, 
@@ -132,6 +155,8 @@ export async function getHotelData(clerkId: string) {
       },
       rooms: user.hotel.rooms,
       reservations: user.hotel.reservations,
+      inventory: user.hotel.inventory,
+      restaurants: user.hotel.restaurants,
       logs: allLogs,
       isOwner: (process.env.AURA_OWNER_EMAILS || "").split(",").includes(user.email)
     };
@@ -227,7 +252,7 @@ export async function purgeHotelDataAction(hotelId: string, type: "RESERVATIONS"
 
 export async function updateRoomStatusAction(roomId: string, status: string) {
   try {
-    const updatedRoom = await (prisma as any).room.update({
+    const updatedRoom = await prisma.room.update({
       where: { id: roomId },
       data: { status: status as RoomStatus }
     });
@@ -241,7 +266,7 @@ export async function updateRoomStatusAction(roomId: string, status: string) {
 
 export async function updateRoomAction(roomId: string, data: Partial<{ number: string, type: string, status: string }>) {
   try {
-    const updatedRoom = await (prisma as any).room.update({
+    const updatedRoom = await prisma.room.update({
       where: { id: roomId },
       data: {
         ...(data.number && { number: data.number }),
@@ -269,6 +294,7 @@ export async function addReservationAction(hotelId: string, data: {
   paymentProvider?: string
 }) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reservation = await (prisma as any).reservation.create({
       data: {
         guestName: data.guestName,
@@ -297,6 +323,7 @@ export async function updateReservationPaymentAction(reservationId: string, data
   amount?: number
 }) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reservation = await (prisma as any).reservation.update({
       where: { id: reservationId },
       data: {
