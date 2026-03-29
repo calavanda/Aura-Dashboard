@@ -13,7 +13,7 @@ export function ReservationList() {
 
   const filtered = reservations.filter(r => 
     r.guestName.toLowerCase().includes(filter.toLowerCase()) || 
-    r.roomType.toLowerCase().includes(filter.toLowerCase())
+    r.roomNumber.toLowerCase().includes(filter.toLowerCase())
   );
 
   return (

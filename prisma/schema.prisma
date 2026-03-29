@@ -42,6 +42,9 @@ model Hotel {
   rooms            Room[]
   reservations     Reservation[]
   users            User[]
+  restaurants      Restaurant[]
+  orders           Order[]
+  inventory        InventoryItem[]
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 }
@@ -61,6 +64,7 @@ model Room {
   id        String     @id @default(auto()) @map("_id") @db.ObjectId
   number    String
   type      String
+  price     Float      @default(0)
   status    RoomStatus @default(Limpia)
   hotelId   String     @db.ObjectId
   hotel     Hotel      @relation(fields: [hotelId], references: [id])
@@ -71,6 +75,7 @@ model Room {
 enum PaymentMethod {
   EN_LINEA
   EFECTIVO
+  CARGO_A_HABITACION
 }
 
 enum PaymentStatus {
@@ -92,6 +97,7 @@ model Reservation {
   guestName       String
   roomNumber      String
   checkIn         DateTime
+  checkOut        DateTime?
   status          String          // CONFIRMADO, PENDIENTE, CANCELADO
   paymentMethod   PaymentMethod   @default(EFECTIVO)
   paymentStatus   PaymentStatus   @default(PENDIENTE)
@@ -102,6 +108,71 @@ model Reservation {
   hotel           Hotel           @relation(fields: [hotelId], references: [id])
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+}
+
+model Restaurant {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  type        String         // RESTAURANTE, BAR, CAFETERIA
+  hotelId     String         @db.ObjectId
+  hotel       Hotel          @relation(fields: [hotelId], references: [id])
+  categories  MenuCategory[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model MenuCategory {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  restaurantId String     @db.ObjectId
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  items        MenuItem[]
+}
+
+model MenuItem {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  price       Float
+  categoryId  String        @db.ObjectId
+  category    MenuCategory  @relation(fields: [categoryId], references: [id])
+  orders      OrderItem[]
+  available   Boolean       @default(true)
+}
+
+model Order {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  hotelId         String        @db.ObjectId
+  hotel           Hotel         @relation(fields: [hotelId], references: [id])
+  roomNumber      String?       // For "CARGO_A_HABITACION"
+  items           OrderItem[]
+  total           Float
+  status          String        // PENDIENTE, PREPARANDO, SERVIDO, PAGADO, CANCELADO
+  paymentMethod   PaymentMethod @default(EFECTIVO)
+  paymentStatus   PaymentStatus @default(PENDIENTE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model OrderItem {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId    String   @db.ObjectId
+  order      Order    @relation(fields: [orderId], references: [id])
+  menuItemId String   @db.ObjectId
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+  price      Float    // Price at the time of order
+}
+
+model InventoryItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  quantity    Float
+  unit        String   // kg, l, pza, etc.
+  threshold   Float    @default(5)
+  hotelId     String   @db.ObjectId
+  hotel       Hotel    @relation(fields: [hotelId], references: [id])
+  updatedAt   DateTime @updatedAt
 }
 
 model AuditLog {

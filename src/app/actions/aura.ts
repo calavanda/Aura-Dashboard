@@ -1,7 +1,8 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { HotelConfig, Room, RoomStatus } from "@/context/AuraContext";
+import { Room, RoomStatus, PaymentMethod, PaymentStatus, PaymentProvider, AuditLog } from "@/types";
+import { HotelConfig } from "@/context/AuraContext";
 import { revalidatePath } from "next/cache";
 
 export async function createHotelWithRooms(config: HotelConfig, clerkId: string) {
@@ -26,8 +27,7 @@ export async function createHotelWithRooms(config: HotelConfig, clerkId: string)
     await createAuditLog(clerkId, "Hotel Creado", `Establecimiento: ${config.name}`);
     revalidatePath("/");
     return { success: true, hotelId: hotel.id };
-  } catch (error) {
-    console.error("Error creating hotel:", error);
+  } catch {
     return { success: false, error: "Failed to create hotel" };
   }
 }
@@ -50,7 +50,7 @@ export async function updateHotelAction(hotelId: string, data: { name?: string, 
   }
 }
 
-export async function addRoomAction(hotelId: string, roomNumber: string, roomType: string, status?: RoomStatus, clerkId?: string) {
+export async function addRoomAction(hotelId: string, roomNumber: string, roomType: string, status?: RoomStatus, price?: number) {
   try {
     const hotel = await prisma.hotel.findUnique({
       where: { id: hotelId },
@@ -65,13 +65,11 @@ export async function addRoomAction(hotelId: string, roomNumber: string, roomTyp
       data: {
         number: roomNumber,
         type: roomType,
+        price: price || 0,
         status: status || "Limpia", // Default if not provided
         hotelId: hotelId,
       }
     });
-    // We need clerkId here for logging. Usually it comes from auth() but since these are specialized actions,
-    // I'll assume we can pass it or fetch it. For now, I'll update the signature if possible.
-    // Actually, I'll just check if I can get the user's clerkId another way or skip detail for now.
     revalidatePath("/");
     return { success: true, room: newRoom };
   } catch (error) {
@@ -115,15 +113,15 @@ export async function getHotelData(clerkId: string) {
           }
         }
       }
-    });
+    }) as any; // Complex include needs a bit of flexibility or a very deep type
 
     if (!user || !user.hotel) return { success: false, error: "No hotel found" };
 
     // Flatten logs from all users
-    const allLogs = user.hotel.users.flatMap(u => u.logs.map(l => ({
+    const allLogs = user.hotel.users.flatMap((u: any) => u.logs.map((l: AuditLog) => ({
       ...l,
       userName: u.email.split('@')[0]
-    }))).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 30);
+    }))).sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 30);
 
     return { 
       success: true, 
@@ -229,9 +227,9 @@ export async function purgeHotelDataAction(hotelId: string, type: "RESERVATIONS"
 
 export async function updateRoomStatusAction(roomId: string, status: string) {
   try {
-    const updatedRoom = await prisma.room.update({
+    const updatedRoom = await (prisma as any).room.update({
       where: { id: roomId },
-      data: { status: status as any }
+      data: { status: status as RoomStatus }
     });
     revalidatePath("/");
     return { success: true, room: updatedRoom };
@@ -243,12 +241,12 @@ export async function updateRoomStatusAction(roomId: string, status: string) {
 
 export async function updateRoomAction(roomId: string, data: Partial<{ number: string, type: string, status: string }>) {
   try {
-    const updatedRoom = await prisma.room.update({
+    const updatedRoom = await (prisma as any).room.update({
       where: { id: roomId },
       data: {
         ...(data.number && { number: data.number }),
         ...(data.type && { type: data.type }),
-        ...(data.status && { status: data.status as any }),
+        ...(data.status && { status: data.status as RoomStatus }),
       }
     });
     revalidatePath("/");
@@ -263,6 +261,7 @@ export async function addReservationAction(hotelId: string, data: {
   guestName: string,
   roomNumber: string,
   checkIn: string, // ISO string
+  checkOut?: string, // ISO string
   status: string,
   amount?: number,
   paymentMethod?: string,
@@ -270,17 +269,18 @@ export async function addReservationAction(hotelId: string, data: {
   paymentProvider?: string
 }) {
   try {
-    const reservation = await prisma.reservation.create({
+    const reservation = await (prisma as any).reservation.create({
       data: {
         guestName: data.guestName,
         roomNumber: data.roomNumber,
         checkIn: new Date(data.checkIn),
+        checkOut: data.checkOut ? new Date(data.checkOut) : null,
         status: data.status,
         hotelId: hotelId,
         amount: data.amount,
-        paymentMethod: (data.paymentMethod as any) || "EFECTIVO",
-        paymentStatus: (data.paymentStatus as any) || "PENDIENTE",
-        paymentProvider: (data.paymentProvider as any) || "NINGUNO"
+        paymentMethod: (data.paymentMethod as PaymentMethod) || "EFECTIVO",
+        paymentStatus: (data.paymentStatus as PaymentStatus) || "PENDIENTE",
+        paymentProvider: (data.paymentProvider as PaymentProvider) || "NINGUNO"
       }
     });
     revalidatePath("/");

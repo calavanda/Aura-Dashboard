@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import { useI18n } from "@/context/I18nContext";
 import { useAura } from "@/context/AuraContext";
 import { AddAssetWizard } from "./AddAssetWizard";
+import { getAdvancedKPIs } from "@/app/actions/analytics";
 import {
   Trophy, 
   Flame, 
@@ -24,11 +25,22 @@ import {
   Calendar
 } from "lucide-react";
 
+import { AdvancedStats, Reservation, Room, InventoryItem } from "@/types";
+
 export function PropertyModule() {
   const { t } = useI18n();
-  const { reservations } = useAura();
+  const { reservations, hotelId, rooms } = useAura();
   const [activeSubTab, setActiveSubTab] = useState("PORTFOLIO");
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [stats, setStats] = useState<AdvancedStats | null>(null);
+
+  React.useEffect(() => {
+    if (activeSubTab === "PORTFOLIO" && hotelId) {
+      getAdvancedKPIs(hotelId).then(res => {
+        if (res.success) setStats(res.stats as AdvancedStats);
+      });
+    }
+  }, [hotelId, activeSubTab]); // Simplified dependency to avoid cascading renders
   
   const subTabs = [
     { id: "PORTFOLIO", label: t("prop.tab.portfolio") },
@@ -78,10 +90,10 @@ export function PropertyModule() {
           >
             {/* Top KPI Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
-               <KpiCard value="0" label={t("prop.stat.units")} desc={t("prop.stat.units.desc")} />
-               <KpiCard value="$0" label={t("prop.stat.revenue")} desc={t("prop.stat.revenue.desc")} valueColor="text-[#10b981]" />
-               <KpiCard value="0%" label={t("prop.stat.occ")} desc={t("prop.stat.occ.desc")} />
-               <KpiCard value="$0" label={t("prop.stat.adr")} desc={t("prop.stat.adr.desc")} />
+               <KpiCard value={rooms.length.toString()} label={t("prop.stat.units")} desc={t("prop.stat.units.desc")} />
+               <KpiCard value={stats?.totalRevenue || "$0"} label={t("prop.stat.revenue")} desc={t("prop.stat.revenue.desc")} valueColor="text-[#10b981]" />
+               <KpiCard value={stats?.occupancyRate || "0%"} label={t("prop.stat.occ")} desc={t("prop.stat.occ.desc")} />
+               <KpiCard value={stats?.adr || "$0"} label={t("prop.stat.adr")} desc={t("prop.stat.adr.desc")} />
             </div>
 
             {/* Middle Section: Snapshots & Graph */}
@@ -146,8 +158,8 @@ export function PropertyModule() {
 
             {/* Bottom KPI Row */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
-               <BottomKpiCard icon={CalendarCheck} label={t("prop.bottom.bookings")} value="0" trend="+14%" trendColor="text-emerald-400" />
-               <BottomKpiCard icon={TrendingUp} label={t("prop.bottom.forecast")} value="$0" trend="+5%" trendColor="text-emerald-400" />
+               <BottomKpiCard icon={CalendarCheck} label={t("prop.bottom.bookings")} value={reservations.length.toString()} trend={stats?.growth || "+0%"} trendColor="text-emerald-400" />
+               <BottomKpiCard icon={TrendingUp} label={t("prop.bottom.forecast")} value={stats?.totalRevenue || "$0"} trend="+5%" trendColor="text-emerald-400" />
                <BottomKpiCard icon={ShieldCheck} label={t("prop.bottom.integrity")} value="99.8%" trend={t("prop.bottom.stable")} trendColor="text-zinc-400" />
                <BottomKpiCard icon={Wrench} label={t("prop.bottom.maint")} value="0" trend={t("prop.bottom.alerts")} trendColor="text-[#3B82F6]" />
             </div>
@@ -189,7 +201,14 @@ function KpiCard({ value, label, desc, valueColor = "text-white" }: { value: str
   );
 }
 
-function SnapshotRow({ icon: Icon, title, value, sub, subDesc, valueColor }: any) {
+function SnapshotRow({ icon: Icon, title, value, sub, subDesc, valueColor }: { 
+  icon: React.ElementType, 
+  title: string, 
+  value: string, 
+  sub: string, 
+  subDesc: string, 
+  valueColor: string 
+}) {
   return (
     <div className="flex items-center justify-between group">
       <div className="flex items-center space-x-4">
@@ -218,7 +237,13 @@ function Legend({ dotColor, label }: { dotColor: string, label: string }) {
   );
 }
 
-function BottomKpiCard({ icon: Icon, label, value, trend, trendColor }: any) {
+function BottomKpiCard({ icon: Icon, label, value, trend, trendColor }: {
+  icon: React.ElementType,
+  label: string,
+  value: string,
+  trend: string,
+  trendColor: string
+}) {
   return (
     <div className="glass p-6 rounded-4xl border-white/5 relative group bg-[#080808]">
       <div className="flex justify-between items-start mb-6">
@@ -267,7 +292,7 @@ function CalendarSubView({ t }: { t: any }) {
   };
   
   // Filter reservations for selected day
-  const dayReservations = reservations.filter((res: any) => {
+  const dayReservations = (reservations as Reservation[]).filter((res: Reservation) => {
      const resDate = new Date(res.checkIn);
      return resDate.getDate() === selectedDay && 
             resDate.getMonth() === currentMonthIdx && 
@@ -322,7 +347,7 @@ function CalendarSubView({ t }: { t: any }) {
               {blanks.map(i => <div key={`blank-${i}`} className="border-r border-b border-white/5 bg-[#080808]/50" />)}
               
               {calendarDays.map(day => {
-                const hasRes = reservations.some((res: any) => {
+                const hasRes = (reservations as Reservation[]).some((res: Reservation) => {
                   const d = new Date(res.checkIn);
                   return d.getDate() === day && d.getMonth() === currentMonthIdx && d.getFullYear() === currentYear;
                 });
@@ -392,7 +417,7 @@ function CalendarSubView({ t }: { t: any }) {
 
           <div className="flex-1 space-y-4">
             {dayReservations.length > 0 ? (
-              dayReservations.map((res: any) => (
+              dayReservations.map((res: Reservation) => (
                 <div key={res.id} className="p-4 rounded-2xl bg-white/2 border border-white/5 group hover:bg-white/5 transition-all">
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-[9px] font-black text-white uppercase tracking-wider">{res.guestName}</span>
@@ -464,7 +489,7 @@ function BookingsSubView({ t }: { t: any }) {
                 <CalendarCheck size={14} className="text-[#3B82F6]" />
                 <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t("prop.book.active")}</span>
              </div>
-             <p className="text-3xl font-black text-white tracking-tighter">{reservations.filter((r: any) => r.status === "CONFIRMADO").length}</p>
+             <p className="text-3xl font-black text-white tracking-tighter">{reservations.filter((r: Reservation) => r.status === "CONFIRMADO").length}</p>
           </div>
           <div className="glass p-6 rounded-4xl border-white/5 bg-[#080808]">
              <div className="flex items-center space-x-2 mb-4">
@@ -488,7 +513,7 @@ function BookingsSubView({ t }: { t: any }) {
           <div className="flex justify-between items-center px-1">
             <ChevronLeft size={16} className="text-zinc-600 cursor-pointer" />
             <div className="flex space-x-2">
-              {weekDays.map((date, idx) => {
+              {weekDays.map((date: Date, idx: number) => {
                 const isSelected = date.getDate() === selectedWeekDate.getDate();
                 const isToday = date.getDate() === new Date().getDate();
                 

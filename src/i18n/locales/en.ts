@@ -264,5 +264,35 @@ export const en = {
   "room.types.single": "Single",
   "room.types.double": "Double",
   "room.types.suite": "Suite",
-  "room.types.penthouse": "Penthouse"
+  "room.types.penthouse": "Penthouse",
+
+  // Restaurant & Bar Module
+  "rest.title": "Restaurant & Bar",
+  "rest.subtitle": "FOOD AND BEVERAGE OPERATIONAL MANAGEMENT",
+  "rest.tab.menu": "MENU",
+  "rest.tab.orders": "ORDERS",
+  "rest.tab.inventory": "INVENTORY",
+  "rest.menu.add": "ADD DISH",
+  "rest.menu.category": "Category",
+  "rest.menu.price": "Price",
+  "rest.menu.desc": "Description",
+  "rest.order.new": "NEW ORDER",
+  "rest.order.table": "Table / Room",
+  "rest.order.status.pending": "Pending",
+  "rest.order.status.prep": "In Kitchen",
+  "rest.order.status.served": "Served",
+  "rest.order.status.paid": "Paid",
+  "rest.inventory.stock": "Current Stock",
+  "rest.inventory.low": "Low Stock",
+  "rest.inventory.threshold": "Alert Threshold",
+
+  // Advanced KPIs
+  "kpi.adr.title": "Average Daily Rate",
+  "kpi.revpar.title": "RevPAR",
+  "kpi.occ.title": "Occupancy Rate",
+  "kpi.rev.total": "Total Revenue",
+  "kpi.rev.fnb": "F&B Revenue",
+  "kpi.rev.rooms": "Room Revenue",
+  "kpi.growth": "Monthly Growth",
+  "kpi.analytics.desc": "Deep dive into institutional performance by department."
 };

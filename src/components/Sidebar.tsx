@@ -16,7 +16,8 @@ import {
   Sparkles,
   Building2,
   Zap,
-  ShieldAlert
+  ShieldAlert,
+  Utensils
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -41,6 +42,7 @@ const menuItems = [
   { id: "Habitaciones", icon: Bed, label: "Habitaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"] },
   { id: "Huéspedes", icon: Users, label: "Huéspedes", roles: ["ADMIN", "GERENTE"] },
   { id: "Finanzas", icon: CreditCard, label: "Finanzas", roles: ["ADMIN"] },
+  { id: "Restaurante & Bar", icon: Utensils, label: "Restaurante & Bar", roles: ["ADMIN", "GERENTE"] },
   { id: "Logs", icon: ListTodo, label: "Logs", roles: ["ADMIN"] },
 ];
 
@@ -101,6 +103,7 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
                 {item.id === "Habitaciones" && t("nav.inventory")}
                 {item.id === "Huéspedes" && t("nav.guests")}
                 {item.id === "Finanzas" && t("nav.finances")}
+                {item.id === "Restaurante & Bar" && t("rest.title")}
                 {item.id === "Logs" && t("nav.logs")}
                 {item.id === "Sandbox" && t("nav.sandbox")}
               </span>

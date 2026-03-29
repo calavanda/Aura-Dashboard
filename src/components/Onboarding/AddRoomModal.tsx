@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Home, Hash, Layers, Loader2, Check } from "lucide-react";
-import { useAura, RoomStatus } from "@/context/AuraContext";
+import { X, Plus, Hash, Layers, Loader2, Check } from "lucide-react";
+import { useAura } from "@/context/AuraContext";
+import { RoomStatus } from "@/types";
 import { useI18n } from "@/context/I18nContext";
 
 interface AddRoomModalProps {
@@ -16,7 +17,7 @@ export function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
   const { t } = useI18n();
   const [number, setNumber] = useState("");
   const [type, setType] = useState(t("room.types.standard"));
-  const [status, setStatus] = useState<RoomStatus>("Limpia");
+  const [status] = useState<RoomStatus>("Limpia");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -44,7 +45,8 @@ export function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
       } else {
         setIsSubmitting(false);
       }
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       setIsSubmitting(false);
     }
   };

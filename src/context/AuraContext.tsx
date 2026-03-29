@@ -16,28 +16,14 @@ import {
   validateMasterKeyAction
 } from "@/app/actions/aura";
 
-export type RoomStatus = "Sucia" | "Limpia" | "Ocupada" | "Mantenimiento";
-
-export interface Room {
-  id: string;
-  number: string;
-  type: string;
-  status: RoomStatus;
-}
-
-export interface Reservation {
-  id: string;
-  guestName: string;
-  roomNumber: string;
-  roomType: string;
-  status: "CONFIRMADO" | "PENDIENTE" | "CANCELADO";
-  checkIn: string;
-  paymentMethod?: "EN_LINEA" | "EFECTIVO";
-  paymentStatus?: "PENDIENTE" | "PAGADO" | "FALLIDO" | "REEMBOLSADO";
-  paymentProvider?: "STRIPE" | "PAYPAL" | "MERCADOPAGO" | "NINGUNO";
-  transactionId?: string;
-  amount?: number;
-}
+import { 
+  Room, 
+  Reservation, 
+  RoomStatus, 
+  Role,
+  AuditLog,
+  Hotel
+} from "@/types";
 
 export interface HotelConfig {
   name: string;
@@ -47,11 +33,6 @@ export interface HotelConfig {
   logoUrl?: string;
 }
 
-// Assuming 'Role' is a type that needs to be defined or imported if it's not a literal string.
-// For now, I'll assume it's a string literal or a type alias that should be added to the union.
-// Given the context, it's likely a type alias for user roles.
-// Since it's not defined in the provided code, I'll add it as a placeholder string type.
-type Role = "ADMIN" | "GERENTE" | "RESERVADOR"; // This is a placeholder, adjust if 'Role' is defined elsewhere.
 
 interface AuraContextType {
   rooms: Room[];
@@ -64,7 +45,7 @@ interface AuraContextType {
   connectionCode: string | null;
   trialDaysLeft: number;
   isOwner: boolean;
-  logs: any[];
+  logs: AuditLog[];
   refreshData: () => Promise<void>;
   updateHotel: (data: { name?: string, type?: string, logoUrl?: string }) => Promise<{ success: boolean, error?: string }>;
   addRoom: (room: { number: string, type: string, status?: RoomStatus }) => Promise<{ success: boolean, error?: string }>;
@@ -92,7 +73,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
   const [connectionCode, setConnectionCode] = useState<string | null>(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number>(15);
   const [isOwner, setIsOwner] = useState<boolean>(false);
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
 
   useEffect(() => {
     async function hydrate() {
@@ -100,7 +81,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
         // Ensure user exists in local DB
         const userRes = await checkOrCreateUserAction(user.id, user.primaryEmailAddress?.emailAddress || "");
         if (userRes.success && userRes.user) {
-          setRole(userRes.user.role as any);
+          setRole(userRes.user.role as Role);
         }
         
         const result = await getHotelData(user.id);
@@ -112,12 +93,12 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
             services: [],
             logoUrl: result.hotel.logoUrl || undefined
           });
-          setRooms(result.rooms as any || []);
-          setReservations(result.reservations as any || []);
-          setLogs(result.logs as any || []);
+          setRooms(result.rooms as Room[] || []);
+          setReservations(result.reservations as Reservation[] || []);
+          setLogs(result.logs as AuditLog[] || []);
           const isOwnerUser = result.isOwner || false;
           setIsOwner(isOwnerUser);
-          const hotel = result.hotel as any;
+          const hotel = result.hotel as Hotel;
           setSubscription(isOwnerUser ? "ENTERPRISE" : (hotel.subscription || "BASIC"));
           setConnectionCode(hotel.connectionCode || null);
           
@@ -138,7 +119,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
   const addRoom = async (roomData: { number: string, type: string, status?: RoomStatus }) => {
     const result = await addRoomAction(hotelId!, roomData.number, roomData.type, roomData.status);
     if (result.success && result.room) {
-      setRooms(prev => [...prev, result.room as any]);
+      setRooms(prev => [...prev, result.room as Room]);
       return { success: true };
     }
     return { success: false, error: result.error };
@@ -210,11 +191,18 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
   const addReservation = async (resData: Omit<Reservation, "id">) => {
     if (!hotelId) return;
     const result = await addReservationAction(hotelId, {
-      ...resData,
-      checkIn: resData.checkIn // Already ISO string from UI usually
+      guestName: resData.guestName,
+      roomNumber: resData.roomNumber,
+      status: resData.status,
+      paymentMethod: resData.paymentMethod?.toString(),
+      paymentStatus: resData.paymentStatus?.toString(),
+      paymentProvider: resData.paymentProvider?.toString(),
+      amount: resData.amount === null ? undefined : resData.amount,
+      checkIn: resData.checkIn instanceof Date ? resData.checkIn.toISOString() : (resData.checkIn as unknown as string),
+      checkOut: resData.checkOut instanceof Date ? resData.checkOut.toISOString() : (resData.checkOut as unknown as string | undefined)
     });
     if (result.success && result.reservation) {
-      setReservations(prev => [result.reservation as any, ...prev]);
+      setReservations(prev => [result.reservation as Reservation, ...prev]);
     }
   };
 
@@ -250,13 +238,13 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
           roomsCount: result.rooms?.length || 0,
           services: [] // We can expand this later
         });
-        setRooms(result.rooms as any || []);
-        setReservations(result.reservations as any || []);
-        setLogs(result.logs as any || []);
+        setRooms(result.rooms as Room[] || []);
+        setReservations(result.reservations as Reservation[] || []);
+        setLogs(result.logs as AuditLog[] || []);
         
         const isOwnerUser = result.isOwner || false;
         setIsOwner(isOwnerUser);
-        const hotel = result.hotel as any;
+        const hotel = result.hotel as Hotel;
         setSubscription(isOwnerUser ? "ENTERPRISE" : (hotel.subscription || "BASIC"));
         setConnectionCode(hotel.connectionCode || null);
         

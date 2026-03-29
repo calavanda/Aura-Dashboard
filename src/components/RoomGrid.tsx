@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
-import { useAura, RoomStatus } from "@/context/AuraContext";
+import { useAura } from "@/context/AuraContext";
+import { RoomStatus } from "@/types";
 import { useI18n } from "@/context/I18nContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bed, CheckCircle2, AlertCircle, Clock, Hammer, Trash2, Plus } from "lucide-react";
+import { Bed, CheckCircle2, Clock, Hammer, Trash2, Plus } from "lucide-react";
 import { AddRoomModal } from "./Onboarding/AddRoomModal";
 
-const statusConfig: Record<RoomStatus, { color: string, icon: any }> = {
+const statusConfig: Record<RoomStatus, { color: string, icon: React.ElementType }> = {
   "Limpia": { color: "text-emerald-400 bg-emerald-500/10", icon: CheckCircle2 },
   "Sucia": { color: "text-amber-400 bg-amber-500/10", icon: Clock },
   "Ocupada": { color: "text-blue-400 bg-blue-500/10", icon: Bed },

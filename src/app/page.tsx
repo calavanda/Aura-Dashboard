@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { AuraProvider, useAura } from "@/context/AuraContext";
 import { Sidebar } from "@/components/Sidebar";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { RoomGrid } from "@/components/RoomGrid";
 import { ReservationList } from "@/components/ReservationList";
 import { SetupWizard } from "@/components/Onboarding/SetupWizard";
@@ -12,26 +11,19 @@ import { AddRoomModal } from "@/components/Onboarding/AddRoomModal";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  SignIn, 
   UserButton,
   useUser 
 } from "@clerk/nextjs";
 import { useI18n } from "@/context/I18nContext";
 import { clsx } from "clsx";
 import { 
-  Bell, 
-  Search, 
   TrendingUp, 
   Bed, 
-  Users,
   CreditCard, 
   CheckCircle2, 
   Clock,
   Sparkles,
-  TestTube2,
-  ListTodo,
-  ChevronRight,
-  ArrowUpRight
+  ChevronRight
 } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { TrialBanner } from "@/components/TrialBanner";
@@ -40,12 +32,12 @@ import { FinanceModule } from "../components/FinanceModule";
 import { AuditLogsModule } from "../components/AuditLogsModule";
 import { GuestModule } from "../components/GuestModule";
 import { SettingsModule } from "@/components/SettingsModule";
-import { PremiumGuard } from "@/components/PremiumGuard";
 import { PropertyModule } from "@/components/PropertyModule";
 import { PlansModule } from "@/components/PlansModule";
 import { AdvancedModule } from "@/components/AdvancedModule";
+import { RestaurantModule } from "@/components/RestaurantModule";
 
-function StatCard({ title, value, change, icon: Icon, trend }: { title: string, value: string, change: string, icon: any, trend: "up" | "down" | "neutral" }) {
+function StatCard({ title, value, change, icon: Icon, trend }: { title: string, value: string, change: string, icon: React.ElementType, trend: "up" | "down" | "neutral" }) {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -80,7 +72,7 @@ function StatCard({ title, value, change, icon: Icon, trend }: { title: string, 
 }
 
 function DashboardHome({ setIsAddRoomModalOpen }: { setIsAddRoomModalOpen: (open: boolean) => void }) {
-  const { rooms, reservations, hotelConfig } = useAura();
+  const { rooms, reservations } = useAura();
   const { t } = useI18n();
   
   const occupiedCount = rooms.filter(r => r.status === "Ocupada").length;
@@ -204,11 +196,14 @@ function AuraDashboardContent() {
   const isCreator = user?.emailAddresses.some(e => AUTHORIZED_EMAILS.includes(e.emailAddress)) || false;
 
   useEffect(() => {
-    if (isSetupComplete) {
-      const tourShown = localStorage.getItem("aura_tour_shown");
-      if (!tourShown) {
-        setShowTour(true);
-      }
+    if (!isSetupComplete) return;
+    
+    const tourShown = localStorage.getItem("aura_tour_shown");
+    if (!tourShown) {
+      // Small Delay to prevent cascading render error in some environments 
+      // and ensure stable initialization
+      const timer = setTimeout(() => setShowTour(true), 100);
+      return () => clearTimeout(timer);
     }
   }, [isSetupComplete]);
 
@@ -265,6 +260,7 @@ function AuraDashboardContent() {
                   {activeTab === "Finanzas" && t("nav.finances")}
                   {activeTab === "Logs" && t("nav.logs")}
                   {activeTab === "Sandbox" && t("nav.sandbox")}
+                  {activeTab === "Restaurante & Bar" && t("rest.title")}
                   {activeTab === "Configuración" && t("nav.settings")}
                   {activeTab === "Planes" && t("nav.plans")}
                   {activeTab === "Avanzado" && t("nav.advanced")}
@@ -337,6 +333,11 @@ function AuraDashboardContent() {
               {activeTab === "Finanzas" && (
                 <motion.div key="finance" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                   <FinanceModule />
+                </motion.div>
+              )}
+              {activeTab === "Restaurante & Bar" && (
+                <motion.div key="rest" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                  <RestaurantModule />
                 </motion.div>
               )}
               {activeTab === "Logs" && (

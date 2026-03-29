@@ -264,5 +264,35 @@ export const es = {
   "room.types.single": "Sencilla",
   "room.types.double": "Doble",
   "room.types.suite": "Suite",
-  "room.types.penthouse": "Penthouse"
+  "room.types.penthouse": "Penthouse",
+
+  // Restaurant & Bar Module
+  "rest.title": "Restaurante & Bar",
+  "rest.subtitle": "GESTIÓN OPERATIVA DE ALIMENTOS Y BEBIDAS",
+  "rest.tab.menu": "MENÚ",
+  "rest.tab.orders": "PEDIDOS",
+  "rest.tab.inventory": "INVENTARIO",
+  "rest.menu.add": "GREGAR PLATILLO",
+  "rest.menu.category": "Categoría",
+  "rest.menu.price": "Precio",
+  "rest.menu.desc": "Descripción",
+  "rest.order.new": "NUEVA COMANDA",
+  "rest.order.table": "Mesa / Hab.",
+  "rest.order.status.pending": "Pendiente",
+  "rest.order.status.prep": "En Cocina",
+  "rest.order.status.served": "Servido",
+  "rest.order.status.paid": "Pagado",
+  "rest.inventory.stock": "Stock Actual",
+  "rest.inventory.low": "Stock Bajo",
+  "rest.inventory.threshold": "Umbral de Alerta",
+
+  // Advanced KPIs
+  "kpi.adr.title": "Average Daily Rate",
+  "kpi.revpar.title": "RevPAR",
+  "kpi.occ.title": "Tasa de Ocupación",
+  "kpi.rev.total": "Ingresos Totales",
+  "kpi.rev.fnb": "Ingresos A&B",
+  "kpi.rev.rooms": "Ingresos Hab.",
+  "kpi.growth": "Crecimiento Mensual",
+  "kpi.analytics.desc": "Análisis profundo del rendimiento institucional por departamento."
 };
