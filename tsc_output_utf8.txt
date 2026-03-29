@@ -1,6 +1,0 @@
-﻿src/components/Onboarding/AddRoomModal.tsx(6,19): error TS2459: Module '"@/context/AuraContext"' declares 'RoomStatus' locally, but it is not exported.
-src/components/ReservationList.tsx(16,7): error TS2339: Property 'roomType' does not exist on type 'Reservation'.
-src/components/RoomGrid.tsx(4,19): error TS2459: Module '"@/context/AuraContext"' declares 'RoomStatus' locally, but it is not exported.
-src/context/AuraContext.tsx(193,56): error TS2345: Argument of type 'Reservation' is not assignable to parameter of type '{ guestName: string; roomNumber: string; checkIn: string; checkOut?: string | undefined; status: string; amount?: number | undefined; paymentMethod?: string | undefined; paymentStatus?: string | undefined; paymentProvider?: string | undefined; }'.
-  Types of property 'checkIn' are incompatible.
-    Type 'Date' is not assignable to type 'string'.
