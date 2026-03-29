@@ -3,13 +3,18 @@
 import React, { useState } from "react";
 import { useAura } from "@/context/AuraContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, ChevronRight, User } from "lucide-react";
+import { Search, Filter, ChevronRight, User, Plus } from "lucide-react";
+import { AddReservationModal } from "./AddReservationModal";
+import { RegisterPaymentModal } from "./RegisterPaymentModal";
 import { useI18n } from "@/context/I18nContext";
+import { Reservation } from "@/types";
 
 export function ReservationList() {
   const { reservations } = useAura();
   const { t } = useI18n();
   const [filter, setFilter] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [paymentModalData, setPaymentModalData] = useState<Reservation | null>(null);
 
   const filtered = reservations.filter(r => 
     r.guestName.toLowerCase().includes(filter.toLowerCase()) || 
@@ -18,6 +23,9 @@ export function ReservationList() {
 
   return (
     <div className="space-y-12">
+      <AddReservationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <RegisterPaymentModal isOpen={!!paymentModalData} onClose={() => setPaymentModalData(null)} reservation={paymentModalData} />
+
       <div className="flex flex-col md:flex-row justify-between items-end gap-6 px-2">
         <div>
           <h3 className="text-4xl font-black tracking-tighter text-white">{t("res.title")}</h3>
@@ -36,6 +44,13 @@ export function ReservationList() {
           </div>
           <button className="glass p-2 rounded-xl text-muted hover:text-primary transition-colors">
             <Filter size={18} />
+          </button>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-primary text-white p-2 px-4 rounded-xl font-bold flex items-center space-x-2 hover:bg-primary/90 transition-colors shadow-[0_0_15px_rgba(255,56,92,0.3)]"
+          >
+            <Plus size={18} />
+            <span className="text-[10px] uppercase tracking-widest">{t("res.new")}</span>
           </button>
         </div>
       </div>
@@ -102,7 +117,10 @@ export function ReservationList() {
                       {res.amount ? `$${res.amount.toLocaleString()}` : '—'}
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <button className="p-2 rounded-lg hover:bg-white/5 text-muted hover:text-primary transition-all">
+                      <button 
+                        onClick={() => setPaymentModalData(res)}
+                        className="p-2 rounded-lg hover:bg-white/5 text-muted hover:text-emerald-400 transition-all"
+                      >
                         <ChevronRight size={18} />
                       </button>
                     </td>

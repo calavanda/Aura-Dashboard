@@ -291,6 +291,28 @@ export async function addReservationAction(hotelId: string, data: {
   }
 }
 
+export async function updateReservationPaymentAction(reservationId: string, data: {
+  paymentStatus: string,
+  paymentMethod: string,
+  amount?: number
+}) {
+  try {
+    const reservation = await (prisma as any).reservation.update({
+      where: { id: reservationId },
+      data: {
+        paymentStatus: data.paymentStatus as PaymentStatus,
+        paymentMethod: data.paymentMethod as PaymentMethod,
+        ...(data.amount !== undefined && { amount: data.amount })
+      }
+    });
+    revalidatePath("/");
+    return { success: true, reservation };
+  } catch (error) {
+    console.error("Error updating reservation payment:", error);
+    return { success: false };
+  }
+}
+
 export async function validateMasterKeyAction(hotelId: string, key: string) {
   try {
     const MASTER_KEY = process.env.AURA_MASTER_KEY || "AURA-OWNER-2026";

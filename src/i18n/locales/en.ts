@@ -205,6 +205,13 @@ export const en = {
   // Reservation List
   "res.title": "Guest Index",
   "res.subtitle": "Active Pipeline Monitoring",
+  "res.new": "NEW MANUAL RESERVATION",
+  "res.guestName": "GUEST NAME",
+  "res.room": "ROOM / UNIT NUMBER",
+  "res.amount": "BASE RATE (OPTIONAL)",
+  "res.checkin": "CHECK-IN (ARRIVAL)",
+  "res.checkout": "CHECK-OUT (DEPARTURE)",
+  "res.add": "CREATE RESERVATION",
   "res.search": "Search by name or room...",
   "res.th.patron": "Patron",
   "res.th.asset": "Asset",
@@ -226,6 +233,17 @@ export const en = {
   "fin.projections": "Aura Projections",
   "fin.forecast": "Your hotel is generating a steady flow. At the current pace, you could close the month with an 8% increase compared to the previous one.",
   "fin.download": "Download PDF Report",
+
+  // Payment Module
+  "pay.title": "SETTLEMENT",
+  "pay.cash": "Cash",
+  "pay.terminal": "POS Terminal",
+  "pay.transfer": "Bank Transfer",
+  "pay.success": "PAYMENT REGISTERED",
+  "pay.debt": "PENDING AMOUNT",
+  "pay.method": "PAYMENT METHOD",
+  "pay.amountOverride": "OVERRIDE AMOUNT (IF DIFFERENT)",
+  "pay.confirm": "REGISTER PAYMENT",
 
   // Guest Module
   "guest.title": "Guests",

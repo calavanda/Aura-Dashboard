@@ -13,7 +13,8 @@ import {
   updateRoomStatusAction,
   updateRoomAction,
   addReservationAction,
-  validateMasterKeyAction
+  validateMasterKeyAction,
+  updateReservationPaymentAction
 } from "@/app/actions/aura";
 
 import { 
@@ -55,6 +56,7 @@ interface AuraContextType {
   clearRooms: () => void;
   toggleRoomStatus: (id: string) => void;
   addReservation: (res: Omit<Reservation, "id">) => void;
+  updateReservationPayment: (id: string, data: { paymentStatus: string, paymentMethod: string, amount?: number }) => Promise<{ success: boolean, error?: string }>;
   completeSetup: (config: HotelConfig) => Promise<void>;
   purgeData: (type: "RESERVATIONS" | "LOGS" | "ALL") => Promise<{ success: boolean, error?: string }>;
 }
@@ -206,6 +208,17 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateReservationPayment = async (id: string, data: { paymentStatus: string, paymentMethod: string, amount?: number }) => {
+    const result = await updateReservationPaymentAction(id, data);
+    if (result.success && result.reservation) {
+      setReservations(prev => prev.map(res => 
+        res.id === id ? { ...res, paymentStatus: result.reservation.paymentStatus, paymentMethod: result.reservation.paymentMethod, amount: result.reservation.amount } : res
+      ));
+      return { success: true };
+    }
+    return { success: false, error: "Failed to update payment" };
+  };
+
   const purgeData = async (type: "RESERVATIONS" | "LOGS" | "ALL") => {
     if (!hotelId) return { success: false, error: "No hotel identified" };
     const result = await purgeHotelDataAction(hotelId, type);
@@ -280,7 +293,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
       toggleRoomStatus, 
       addReservation, 
       completeSetup,
-      purgeData
+      purgeData,
+      updateReservationPayment
     }}>
       {children}
     </AuraContext.Provider>

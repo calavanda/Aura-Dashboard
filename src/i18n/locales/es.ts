@@ -205,6 +205,13 @@ export const es = {
   // Reservation List
   "res.title": "Index de Huéspedes",
   "res.subtitle": "Monitoreo de Pipeline Activo",
+  "res.new": "NUEVA RESERVA MANUAL",
+  "res.guestName": "NOMBRE DEL CLIENTE",
+  "res.room": "N° HABITACIÓN / UNIDAD",
+  "res.amount": "TARIFA BASE (OPCIONAL)",
+  "res.checkin": "CHECK-IN (LLEGADA)",
+  "res.checkout": "CHECK-OUT (SALIDA)",
+  "res.add": "CREAR RESERVA",
   "res.search": "Buscar por nombre o habitación...",
   "res.th.patron": "Patrón",
   "res.th.asset": "Activo",
@@ -226,6 +233,17 @@ export const es = {
   "fin.projections": "Proyecciones Aura",
   "fin.forecast": "Tu hotel está generando un flujo constante. Con el ritmo actual, podrías cerrar el mes con un incremento del 8% en comparación al anterior.",
   "fin.download": "Descargar Reporte PDF",
+
+  // Payment Module
+  "pay.title": "LIQUIDACIÓN",
+  "pay.cash": "Efectivo",
+  "pay.terminal": "Terminal TPV",
+  "pay.transfer": "Transferencia",
+  "pay.success": "PAGO REGISTRADO",
+  "pay.debt": "MONTO PENDIENTE",
+  "pay.method": "MÉTODO DE PAGO",
+  "pay.amountOverride": "SOBRESCRIBIR MONTO (SI DIFIERE)",
+  "pay.confirm": "REGISTRAR PAGO",
 
   // Guest Module
   "guest.title": "Huéspedes",
