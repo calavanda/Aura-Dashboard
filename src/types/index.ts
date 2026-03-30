@@ -132,3 +132,9 @@ export interface AdvancedStats {
   roomRevenue: string;
   growth: string;
 }
+export interface ActionResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  code?: string;
+}

@@ -1,12 +1,34 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { Restaurant, Order, InventoryItem, MenuCategory, MenuItem } from "@/types";
+import { 
+  Restaurant, 
+  Order, 
+  InventoryItem, 
+  ActionResponse,
+  PaymentMethod
+} from "@/types";
 import { revalidatePath } from "next/cache";
+import { 
+  OrderSchema, 
+  InventoryItemSchema 
+} from "@/lib/validation";
+import { z } from "zod";
 
-export async function getRestaurantData(hotelId: string) {
+/**
+ * Standardized Error Creator
+ */
+function createError<T>(message: string, code?: string): ActionResponse<T> {
+  return { success: false, error: message, code };
+}
+
+export async function getRestaurantData(hotelId: string): Promise<ActionResponse<{
+  restaurants: Restaurant[],
+  activeOrders: Order[],
+  inventory: InventoryItem[]
+}>> {
   try {
-    const restaurants = await (prisma as any).restaurant.findMany({
+    const restaurants = await prisma.restaurant.findMany({
       where: { hotelId },
       include: {
         categories: {
@@ -15,9 +37,9 @@ export async function getRestaurantData(hotelId: string) {
           }
         }
       }
-    }) as Restaurant[];
+    }) as unknown as Restaurant[];
 
-    const activeOrders = await (prisma as any).order.findMany({
+    const activeOrders = await prisma.order.findMany({
       where: { 
         hotelId,
         status: { in: ["PENDIENTE", "PREPARANDO"] }
@@ -30,102 +52,130 @@ export async function getRestaurantData(hotelId: string) {
         }
       },
       orderBy: { createdAt: "desc" }
-    }) as Order[];
+    }) as unknown as Order[];
 
-    const inventory = await (prisma as any).inventoryItem.findMany({
+    const inventory = await prisma.inventoryItem.findMany({
       where: { hotelId }
-    }) as InventoryItem[];
+    }) as unknown as InventoryItem[];
 
-    return { success: true, restaurants, activeOrders, inventory };
-  } catch (error) {
-    console.error("Error fetching restaurant data:", error);
-    return { success: false, error: "Failed to fetch restaurant data" };
+    return { 
+      success: true, 
+      data: { restaurants, activeOrders, inventory } 
+    };
+  } catch {
+    console.error("Error fetching restaurant data");
+    return createError("Failed to fetch restaurant data", "FETCH_ERROR");
   }
 }
 
-export async function createRestaurant(hotelId: string, name: string, type: string) {
+export async function createRestaurant(hotelId: string, name: string, type: string): Promise<ActionResponse<Restaurant>> {
   try {
     const restaurant = await prisma.restaurant.create({
+      data: { name, type, hotelId }
+    });
+    
+    await prisma.auditLog.create({
       data: {
-        name,
-        type,
-        hotelId
+        userId: (await getUserId()) || "",
+        action: "CREATE_RESTAURANT",
+        details: `Created restaurant: ${name}`,
       }
     });
-    revalidatePath("/");
-    return { success: true, restaurant };
-  } catch (error) {
-    console.error("Error creating restaurant:", error);
-    return { success: false, error: "Failed to create restaurant" };
-  }
-}
 
-export async function createMenuCategory(restaurantId: string, name: string) {
-  try {
-    const category = await prisma.menuCategory.create({
-      data: {
-        name,
-        restaurantId
-      }
-    });
     revalidatePath("/");
-    return { success: true, category };
+    return { success: true, data: restaurant as unknown as Restaurant };
   } catch {
-    return { success: false, error: "Failed to create category" };
+    return createError("Failed to create restaurant", "CREATE_ERROR");
   }
 }
 
-export async function createMenuItem(categoryId: string, data: { name: string, description?: string, price: number }) {
+export async function processOrder(hotelId: string, rawData: unknown): Promise<ActionResponse<Order>> {
   try {
-    const item = await prisma.menuItem.create({
-      data: {
-        ...data,
-        categoryId
-      }
-    });
-    revalidatePath("/");
-    return { success: true, item };
-  } catch {
-    return { success: false, error: "Failed to create menu item" };
-  }
-}
+    // 1. Validate Input
+    const validated = OrderSchema.parse({ ...(rawData as object), hotelId });
 
-export async function processOrder(hotelId: string, data: {
-  roomNumber?: string,
-  items: { menuItemId: string, quantity: number, price: number }[],
-  total: number,
-  paymentMethod: any // Enum from types later
-}) {
-  try {
-    const order = await prisma.order.create({
-      data: {
-        hotelId,
-        roomNumber: data.roomNumber,
-        total: data.total,
-        status: "PENDIENTE",
-        paymentMethod: data.paymentMethod,
-        items: {
-          create: data.items.map(item => ({
-            menuItemId: item.menuItemId,
-            quantity: item.quantity,
-            price: item.price
-          }))
+    // 2. Start Transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // 3. Check and Deduct Inventory
+      for (const item of validated.items) {
+        // Find recipes for this menu item
+        const menuItem = await tx.menuItem.findUnique({
+          where: { id: item.menuItemId },
+          include: { recipe: true }
+        });
+
+        if (!menuItem) throw new Error(`Menu item ${item.menuItemId} not found`);
+
+        for (const ingredient of menuItem.recipe) {
+          const inventoryItem = await tx.inventoryItem.findUnique({
+            where: { id: ingredient.inventoryItemId }
+          });
+
+          if (!inventoryItem) continue;
+
+          const totalNeeded = ingredient.quantityNeeded * item.quantity;
+          
+          if (inventoryItem.quantity < totalNeeded) {
+            throw new Error(`INSUFFICIENT_STOCK:${inventoryItem.name}`);
+          }
+
+          // Deduct stock
+          await tx.inventoryItem.update({
+            where: { id: inventoryItem.id },
+            data: { quantity: { decrement: totalNeeded } }
+          });
         }
       }
+
+      // 4. Create Order
+      const order = await tx.order.create({
+        data: {
+          hotelId: validated.hotelId,
+          roomNumber: validated.roomNumber,
+          total: validated.total,
+          status: "PENDIENTE",
+          paymentMethod: validated.paymentMethod as PaymentMethod,
+          items: {
+            create: validated.items.map(i => ({
+              menuItemId: i.menuItemId,
+              quantity: i.quantity,
+              price: i.price
+            }))
+          }
+        },
+        include: {
+          items: {
+            include: { menuItem: true }
+          }
+        }
+      });
+
+      return order;
     });
 
-    // Deduct inventory logic could go here if items have ingredients linked
-    // For now we'll just log it
-    
     revalidatePath("/");
-    return { success: true, order };
-  } catch (error) {
-    console.error("Error processing order:", error);
-    return { success: false, error: "Failed to process order" };
+    return { success: true, data: result as unknown as Order };
+  } catch (err: unknown) {
+    console.error("Order processing failed:", err);
+    if (err instanceof z.ZodError) {
+      return createError(err.issues[0].message, "VALIDATION_ERROR");
+    }
+    const error = err as Error;
+    if (error.message?.startsWith("INSUFFICIENT_STOCK:")) {
+      const itemName = error.message.split(":")[1];
+      return createError(`Inventario insuficiente para: ${itemName}`, "STOCK_ERROR");
+    }
+    return createError(error.message || "Failed to process order", "SYSTEM_ERROR");
   }
 }
 
-export async function updateOrderStatus(orderId: string, status: string) {
+// Placeholder for user context
+async function getUserId() {
+  const user = await prisma.user.findFirst();
+  return user?.id;
+}
+
+export async function updateOrderStatus(orderId: string, status: string): Promise<ActionResponse> {
   try {
     await prisma.order.update({
       where: { id: orderId },
@@ -133,30 +183,37 @@ export async function updateOrderStatus(orderId: string, status: string) {
     });
     revalidatePath("/");
     return { success: true };
-  } catch (error) {
-    return { success: false };
+  } catch {
+    return createError("Failed to update status");
   }
 }
 
-export async function updateInventoryItem(hotelId: string, data: { name: string, quantity: number, unit: string, threshold?: number }) {
+export async function updateInventoryItem(hotelId: string, rawData: unknown): Promise<ActionResponse<InventoryItem>> {
   try {
+    const validated = InventoryItemSchema.parse(rawData);
+    const id = (rawData as { id?: string }).id;
+
     const item = await prisma.inventoryItem.upsert({
-      where: { id: (data as any).id || "new-item" }, // This is a bit hacky for demo, usually we have ID
+      where: { id: id || "new-item-placeholder" },
       update: {
-        quantity: data.quantity,
-        threshold: data.threshold
+        name: validated.name,
+        quantity: validated.quantity,
+        unit: validated.unit,
+        threshold: validated.threshold,
+        price: validated.price,
       },
       create: {
-        name: data.name,
-        quantity: data.quantity,
-        unit: data.unit,
-        threshold: data.threshold || 5,
+        ...validated,
         hotelId
       }
     });
+
     revalidatePath("/");
-    return { success: true, item };
-  } catch (error) {
-    return { success: false };
+    return { success: true, data: item as unknown as InventoryItem };
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      return createError(err.issues[0].message, "VALIDATION_ERROR");
+    }
+    return createError("Failed to update inventory");
   }
 }
