@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { Restaurant, Order, InventoryItem, MenuCategory, MenuItem } from "@/types";
 import { useCallback } from "react";
+import { AddOrderModal } from "./Restaurant/AddOrderModal";
+import { AddMenuItemModal } from "./Restaurant/AddMenuItemModal";
 
 export function RestaurantModule() {
   const { t } = useI18n();
@@ -31,6 +33,8 @@ export function RestaurantModule() {
     inventory: InventoryItem[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!hotelId) return;
@@ -111,7 +115,7 @@ export function RestaurantModule() {
                     {t("rest.tab.orders")} ACTIVOS
                   </h4>
                   <button 
-                    onClick={() => {}}
+                    onClick={() => setIsOrderModalOpen(true)}
                     className="bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-white text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-full flex items-center shadow-[0_0_15px_rgba(59,130,246,0.3)] transition group"
                   >
                     <Plus size={12} className="mr-2 group-hover:rotate-90 transition-transform" /> {t("rest.order.new")}
@@ -200,7 +204,10 @@ export function RestaurantModule() {
                   </div>
                   <input type="text" placeholder="Buscar en el menú..." className="w-full bg-[#0A0A0A] border border-white/5 rounded-full py-3 pl-10 pr-4 text-xs text-white outline-none focus:border-white/20 transition-all font-bold" />
                 </div>
-                <button className="bg-[#FF385C] hover:bg-[#FF385C]/90 text-white text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full flex items-center shadow-[0_0_15px_rgba(255,56,92,0.4)] transition">
+                <button 
+                  onClick={() => setIsMenuModalOpen(true)}
+                  className="bg-[#FF385C] hover:bg-[#FF385C]/90 text-white text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full flex items-center shadow-[0_0_15px_rgba(255,56,92,0.4)] transition"
+                >
                   <Plus size={12} className="mr-2" /> {t("rest.menu.add")}
                 </button>
               </div>
@@ -277,6 +284,25 @@ export function RestaurantModule() {
             </motion.div>
           )}
         </AnimatePresence>
+      )}
+
+      {/* Modals */}
+      {restaurantData?.restaurants && restaurantData.restaurants.length > 0 && (
+        <>
+          <AddOrderModal 
+            isOpen={isOrderModalOpen} 
+            onClose={() => setIsOrderModalOpen(false)}
+            restaurants={restaurantData.restaurants}
+            hotelId={hotelId || ""}
+            onSuccess={loadData}
+          />
+          <AddMenuItemModal 
+            isOpen={isMenuModalOpen}
+            onClose={() => setIsMenuModalOpen(false)}
+            restaurant={restaurantData.restaurants[0]} // Using first restaurant as context
+            onSuccess={loadData}
+          />
+        </>
       )}
     </div>
   );

@@ -2,16 +2,19 @@
 
 import prisma from "@/lib/prisma";
 import { 
-  Restaurant, 
+  Restaurant,
   Order, 
   InventoryItem, 
   ActionResponse,
-  PaymentMethod
+  PaymentMethod,
+  MenuCategory,
+  MenuItem
 } from "@/types";
 import { revalidatePath } from "next/cache";
 import { 
   OrderSchema, 
-  InventoryItemSchema 
+  InventoryItemSchema,
+  MenuItemSchema
 } from "@/lib/validation";
 import { z } from "zod";
 
@@ -215,5 +218,50 @@ export async function updateInventoryItem(hotelId: string, rawData: unknown): Pr
       return createError(err.issues[0].message, "VALIDATION_ERROR");
     }
     return createError("Failed to update inventory");
+  }
+}
+
+export async function createMenuCategory(restaurantId: string, name: string): Promise<ActionResponse<MenuCategory>> {
+  try {
+    const category = await prisma.menuCategory.create({
+      data: { name, restaurantId }
+    });
+    
+    revalidatePath("/");
+    return { success: true, data: category as unknown as MenuCategory };
+  } catch {
+    return createError("Failed to create category");
+  }
+}
+
+export async function createMenuItem(hotelId: string, rawData: unknown): Promise<ActionResponse<MenuItem>> {
+  try {
+    const validated = MenuItemSchema.parse(rawData);
+    
+    const menuItem = await prisma.menuItem.create({
+      data: {
+        name: validated.name,
+        description: validated.description,
+        price: validated.price,
+        categoryId: validated.categoryId,
+        available: true
+      }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: (await getUserId()) || "",
+        action: "CREATE_MENU_ITEM",
+        details: `Created dish: ${validated.name}`,
+      }
+    });
+
+    revalidatePath("/");
+    return { success: true, data: menuItem as unknown as MenuItem };
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      return createError(err.issues[0].message, "VALIDATION_ERROR");
+    }
+    return createError("Failed to create dish");
   }
 }
