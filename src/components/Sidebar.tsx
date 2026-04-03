@@ -23,6 +23,8 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useClerk } from "@clerk/nextjs";
 import { useI18n } from "@/context/I18nContext";
+import { useAura } from "@/context/AuraContext";
+import { BusinessMode } from "@/types";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -36,26 +38,30 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { id: "Dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "GERENTE", "RESERVADOR"] },
-  { id: "Reservaciones", icon: Calendar, label: "Reservaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"] },
-  { id: "Mis Propiedades", icon: Building2, label: "Mis Propiedades", roles: ["ADMIN", "GERENTE"] },
-  { id: "Habitaciones", icon: Bed, label: "Habitaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"] },
-  { id: "Huéspedes", icon: Users, label: "Huéspedes", roles: ["ADMIN", "GERENTE"] },
-  { id: "Finanzas", icon: CreditCard, label: "Finanzas", roles: ["ADMIN"] },
-  { id: "Restaurante & Bar", icon: Utensils, label: "Restaurante & Bar", roles: ["ADMIN", "GERENTE"] },
-  { id: "Logs", icon: ListTodo, label: "Logs", roles: ["ADMIN"] },
+  { id: "Dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "GERENTE", "RESERVADOR"], modes: ["HOSPITALITY", "GASTRONOMY"] },
+  { id: "Reservaciones", icon: Calendar, label: "Reservaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"], modes: ["HOSPITALITY"] },
+  { id: "Mis Propiedades", icon: Building2, label: "Mis Propiedades", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY"] },
+  { id: "Habitaciones", icon: Bed, label: "Habitaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"], modes: ["HOSPITALITY"] },
+  { id: "Huéspedes", icon: Users, label: "Huéspedes", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY", "GASTRONOMY"] },
+  { id: "Finanzas", icon: CreditCard, label: "Finanzas", roles: ["ADMIN"], modes: ["HOSPITALITY", "GASTRONOMY"] },
+  { id: "Restaurante & Bar", icon: Utensils, label: "Restaurante & Bar", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY", "GASTRONOMY"] },
+  { id: "Logs", icon: ListTodo, label: "Logs", roles: ["ADMIN"], modes: ["HOSPITALITY", "GASTRONOMY"] },
 ];
 
 export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarProps) {
   const [mounted, setMounted] = React.useState(false);
   const { signOut } = useClerk();
   const { language, setLanguage, t } = useI18n();
+  const { businessMode } = useAura();
   React.useEffect(() => setMounted(true), []);
 
-  const filteredItems = menuItems.filter(item => !role || item.roles.includes(role));
+  const filteredItems = menuItems.filter(item => 
+    (!role || item.roles.includes(role)) && 
+    (item.modes.includes(businessMode))
+  );
 
   if (isCreator) {
-    filteredItems.push({ id: "Sandbox", icon: TestTube2, label: "Sandbox", roles: ["ADMIN"] });
+    filteredItems.push({ id: "Sandbox", icon: TestTube2, label: "Sandbox", roles: ["ADMIN"], modes: ["HOSPITALITY", "GASTRONOMY"] });
   }
 
   if (!mounted) return <aside className="w-60 border-r border-white/5 bg-black" />;
@@ -101,7 +107,7 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
                 {item.id === "Reservaciones" && t("nav.reservations")}
                 {item.id === "Mis Propiedades" && t("nav.properties")}
                 {item.id === "Habitaciones" && t("nav.inventory")}
-                {item.id === "Huéspedes" && t("nav.guests")}
+                {item.id === "Huéspedes" && (businessMode === "GASTRONOMY" ? t("nav.clients") : t("nav.guests"))}
                 {item.id === "Finanzas" && t("nav.finances")}
                 {item.id === "Restaurante & Bar" && t("rest.title")}
                 {item.id === "Logs" && t("nav.logs")}

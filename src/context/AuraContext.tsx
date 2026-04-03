@@ -25,12 +25,14 @@ import {
   AuditLog,
   Hotel,
   InventoryItem,
-  Restaurant
+  Restaurant,
+  BusinessMode
 } from "@/types";
 
 export interface HotelConfig {
   name: string;
-  type: string; // Hotel, Hostal, Vivienda, etc.
+  type: string; // Hotel, Hostal, Vivienda, Restaurante, etc.
+  businessMode: BusinessMode;
   roomsCount: number;
   services: string[]; // Restaurant, Pool, etc.
   logoUrl?: string;
@@ -44,6 +46,7 @@ interface AuraContextType {
   restaurants: Restaurant[];
   hotelConfig: HotelConfig | null;
   hotelId: string | null;
+  businessMode: BusinessMode;
   isSetupComplete: boolean;
   role: "ADMIN" | "GERENTE" | "RESERVADOR" | Role | null;
   subscription: "BASIC" | "PRO" | "ENTERPRISE";
@@ -76,6 +79,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
   const [hotelConfig, setHotelConfig] = useState<HotelConfig | null>(null);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [hotelId, setHotelId] = useState<string | null>(null);
+  const [businessMode, setBusinessMode] = useState<BusinessMode>("HOSPITALITY");
   const [role, setRole] = useState<"ADMIN" | "GERENTE" | "RESERVADOR" | null>(null);
   const [subscription, setSubscription] = useState<"BASIC" | "PRO" | "ENTERPRISE">("BASIC");
   const [connectionCode, setConnectionCode] = useState<string | null>(null);
@@ -97,10 +101,12 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
           setHotelConfig({
             name: result.hotel.name,
             type: result.hotel.type,
+            businessMode: result.hotel.businessMode as BusinessMode,
             roomsCount: result.rooms?.length || 0,
             services: [],
             logoUrl: result.hotel.logoUrl || undefined
           });
+          setBusinessMode(result.hotel.businessMode as BusinessMode);
           setRooms(result.rooms as Room[] || []);
           setReservations(result.reservations as Reservation[] || []);
           setInventoryItems(result.inventory as InventoryItem[] || []);
@@ -256,9 +262,11 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
         setHotelConfig({
           name: result.hotel.name,
           type: result.hotel.type,
+          businessMode: result.hotel.businessMode as BusinessMode,
           roomsCount: result.rooms?.length || 0,
           services: [] // We can expand this later
         });
+        setBusinessMode(result.hotel.businessMode as BusinessMode);
         setRooms(result.rooms as Room[] || []);
         setReservations(result.reservations as Reservation[] || []);
         setInventoryItems(result.inventory as InventoryItem[] || []);
@@ -288,6 +296,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
       restaurants,
       hotelConfig, 
       hotelId,
+      businessMode,
       isSetupComplete, 
       role,
       subscription,

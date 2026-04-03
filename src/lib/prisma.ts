@@ -29,7 +29,7 @@ export const auraPrisma = primaryPrisma.$extends({
       try {
         // Step 1: Attempt the query on Atlas (Primary)
         return await query(args);
-      } catch (error: any) {
+      } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         // Step 2: Detect connection failure (P1001, etc.)
         const isConnectionError = 
           error.code === 'P1001' || 
@@ -42,8 +42,8 @@ export const auraPrisma = primaryPrisma.$extends({
           // Step 3: Initialize a temporary local client for this query
           const localClient = prismaClientSingleton(FALLBACK_URL);
           try {
-            // @ts-ignore - Dynamic dispatch to the local model
-            return await localClient[model ? model.toLowerCase() : 'query'](args);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return await (localClient as unknown as Record<string, any>)[model ? model.toLowerCase() : 'query'](args);
           } finally {
             await localClient.$disconnect();
           }

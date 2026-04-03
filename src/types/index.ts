@@ -1,6 +1,7 @@
 export type Role = "ADMIN" | "GERENTE" | "RESERVADOR";
 export type RoomStatus = "Limpia" | "Sucia" | "Ocupada" | "Mantenimiento";
 export type SubscriptionTier = "BASIC" | "PRO" | "ENTERPRISE";
+export type BusinessMode = "HOSPITALITY" | "GASTRONOMY";
 export type PaymentMethod = "EN_LINEA" | "EFECTIVO" | "CARGO_A_HABITACION" | "TERMINAL" | "TRANSFERENCIA";
 export type PaymentStatus = "PENDIENTE" | "PAGADO" | "FALLIDO" | "REEMBOLSADO";
 export type PaymentProvider = "STRIPE" | "PAYPAL" | "MERCADOPAGO" | "NINGUNO";
@@ -9,6 +10,7 @@ export interface Hotel {
   id: string;
   name: string;
   type: string;
+  businessMode: BusinessMode;
   logoUrl?: string | null;
   subscription: SubscriptionTier;
   connectionCode?: string | null;

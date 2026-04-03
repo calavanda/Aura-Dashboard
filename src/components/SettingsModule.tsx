@@ -1,32 +1,25 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import Image from "next/image";
 import { 
-  Settings, 
   Building2, 
   Store, 
   Home, 
   Save, 
   RefreshCcw,
   Bell,
-  Lock,
   Globe,
   Camera,
-  ShieldCheck,
-  Zap,
-  Ticket,
-  Sparkles,
-  Trash2,
-  Eraser,
-  AlertTriangle
+  AlertTriangle,
+  Coffee,
+  Utensils
 } from "lucide-react";
 import { useAura } from "@/context/AuraContext";
 import { useI18n } from "@/context/I18nContext";
-import { generateConnectionCodeAction } from "@/app/actions/aura";
 
 export function SettingsModule() {
-  const { hotelConfig, updateHotel, refreshData } = useAura();
+  const { hotelConfig, updateHotel, refreshData, businessMode } = useAura();
   const { t } = useI18n();
   
   const [formData, setFormData] = useState({
@@ -85,8 +78,8 @@ export function SettingsModule() {
         <div className="md:col-span-2 space-y-6">
           <div className="glass p-8 rounded-[40px] space-y-6">
             <h4 className="text-lg font-bold font-outfit flex items-center gap-2">
-              <Building2 size={20} className="text-primary" />
-              {t("set.details")}
+              {businessMode === "GASTRONOMY" ? <Store size={20} className="text-primary" /> : <Building2 size={20} className="text-primary" />}
+              {businessMode === "GASTRONOMY" ? t("setup.business.title") : t("set.details")}
             </h4>
 
             <div className="grid grid-cols-1 gap-6">
@@ -95,7 +88,7 @@ export function SettingsModule() {
                   <label className="w-20 h-20 bg-accent rounded-3xl flex items-center justify-center text-muted relative group overflow-hidden cursor-pointer border border-border">
                     <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                     {formData.logoUrl ? (
-                       <img src={formData.logoUrl} alt="Hotel Logo" className="w-full h-full object-cover" />
+                       <Image src={formData.logoUrl} alt="Hotel Logo" fill className="object-cover" />
                     ) : (
                        <Camera size={24} className="group-hover:scale-110 transition-transform" />
                     )}
@@ -104,34 +97,39 @@ export function SettingsModule() {
                     </div>
                   </label>
                   <div className="flex-1">
-                    <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">{t("set.bizName")}</label>
+                    <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">{businessMode === "GASTRONOMY" ? t("setup.business.label") : t("set.bizName")}</label>
                     <input 
                       type="text" 
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full bg-accent/30 border border-border rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      placeholder={businessMode === "GASTRONOMY" ? t("setup.business.placeholder") : t("setup.property.placeholder")}
+                      className="w-full bg-accent/30 border border-border rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all text-white placeholder:text-zinc-600"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">{t("set.propType")}</label>
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">{businessMode === "GASTRONOMY" ? t("setup.business.type") : t("set.propType")}</label>
                   <div className="grid grid-cols-3 gap-3">
-                    {[
+                    {(businessMode === "GASTRONOMY" ? [
+                      { id: 'Restaurante', icon: Utensils },
+                      { id: 'Bar', icon: Store },
+                      { id: 'Cafetería', icon: Coffee }
+                    ] : [
                       { id: 'Hotel', icon: Building2 },
                       { id: 'Hostal', icon: Store },
                       { id: 'Vivienda', icon: Home }
-                    ].map((type) => (
+                    ]).map((type) => (
                       <button
                         key={type.id}
                         onClick={() => setFormData({...formData, type: type.id})}
                         className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${
                           formData.type === type.id 
                             ? 'bg-primary/10 border-primary text-primary shadow-lg shadow-primary/10' 
-                            : 'bg-accent/30 border-border text-muted hover:border-muted'
+                            : 'bg-accent/30 border-border text-muted hover:border-muted group'
                         }`}
                       >
-                        <type.icon size={20} />
+                        <type.icon size={20} className={formData.type === type.id ? 'text-primary' : 'text-muted group-hover:text-foreground'} />
                         <span className="text-[10px] font-bold uppercase">{type.id}</span>
                       </button>
                     ))}
@@ -193,7 +191,7 @@ export function SettingsModule() {
   );
 }
 
-function ToggleRow({ icon: Icon, title, desc, active, onToggle }: { icon: any, title: string, desc: string, active: boolean, onToggle: () => void }) {
+function ToggleRow({ icon: Icon, title, desc, active, onToggle }: { icon: React.ElementType, title: string, desc: string, active: boolean, onToggle: () => void }) {
   return (
     <div className="flex items-center justify-between p-4 rounded-[24px] hover:bg-accent/30 transition-all group">
       <div className="flex items-center gap-4">

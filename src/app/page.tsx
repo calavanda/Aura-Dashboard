@@ -23,7 +23,9 @@ import {
   CheckCircle2, 
   Clock,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle,
+  Utensils
 } from "lucide-react";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { TrialBanner } from "@/components/TrialBanner";
@@ -68,6 +70,63 @@ function StatCard({ title, value, change, icon: Icon, trend }: { title: string, 
         <p className="text-4xl font-black mt-2 tracking-tighter text-white drop-shadow-sm">{value}</p>
       </div>
     </motion.div>
+  );
+}
+
+function GastroDashboardHome() {
+  const { restaurants, inventoryItems } = useAura();
+  const { t } = useI18n();
+  
+  // Example stats for GASTRONOMY
+  const totalItems = restaurants.reduce((acc, r) => acc + (r.categories?.reduce((a, c) => a + (c.items?.length || 0), 0) || 0), 0);
+  const lowStockCount = inventoryItems.filter(i => i.quantity <= i.threshold).length;
+
+  return (
+    <div className="space-y-20 pb-20">
+      {/* Welcome Header */}
+      <div className="relative">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="relative z-10"
+        >
+          <div className="flex items-center space-x-2 mb-6">
+            <span className="w-2 h-2 rounded-full bg-[#FF385C] shadow-[0_0_10px_#FF385C]" />
+            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em] font-institutional">{t("dash.op.center")}</span>
+          </div>
+          <h1 className="text-6xl font-black tracking-tighter text-white mb-4 leading-[0.9]">
+            Aura <span className="text-gradient-red">Gastronomy</span>
+          </h1>
+          <p className="text-zinc-500 text-sm font-medium tracking-tight max-w-lg">
+            Sistema Institucional de Gestión de Alimentos y Bebidas.
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Stats Grid */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
+        <StatCard title="Ventas del Día" value="$0" change="0%" trend="neutral" icon={CreditCard} />
+        <StatCard title="Pedidos Activos" value="0" change="0" trend="neutral" icon={Clock} />
+        <StatCard title="Stock Bajo" value={`${lowStockCount}`} change={lowStockCount > 0 ? "Revisar" : "Ok"} trend={lowStockCount > 0 ? "down" : "neutral"} icon={AlertTriangle} />
+        <StatCard title="Platillos en Menú" value={`${totalItems}`} change="Estable" trend="neutral" icon={Utensils} />
+      </section>
+
+      {/* Main Content Areas */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-12 relative z-10">
+        <div className="xl:col-span-2 space-y-10">
+          <div className="flex justify-between items-end px-2">
+            <div>
+              <h3 className="text-3xl font-black tracking-tighter text-white">Operaciones en Vivo</h3>
+              <p className="text-zinc-500 text-xs mt-1 font-institutional tracking-[0.2em] font-black">ESTADO DE COCINA & SERVICIO</p>
+            </div>
+          </div>
+          
+          <div className="glass p-2 rounded-[2.5rem] border-white/5 bg-white/1">
+             <RestaurantModule />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -180,7 +239,7 @@ function DashboardHome({ setIsAddRoomModalOpen }: { setIsAddRoomModalOpen: (open
 }
 
 function AuraDashboardContent() {
-  const { isSetupComplete, hotelConfig, clearRooms, role } = useAura();
+  const { isSetupComplete, hotelConfig, clearRooms, role, businessMode } = useAura();
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [showTour, setShowTour] = useState(false);
   const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
@@ -291,7 +350,7 @@ function AuraDashboardContent() {
             <AnimatePresence mode="wait">
               {activeTab === "Dashboard" && (
                 <motion.div key="dash" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} suppressHydrationWarning>
-                  <DashboardHome setIsAddRoomModalOpen={setIsAddRoomModalOpen} />
+                  {businessMode === "GASTRONOMY" ? <GastroDashboardHome /> : <DashboardHome setIsAddRoomModalOpen={setIsAddRoomModalOpen} />}
                 </motion.div>
               )}
               {activeTab === "Reservaciones" && (

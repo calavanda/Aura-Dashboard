@@ -11,9 +11,21 @@ export async function createHotelWithRooms(config: HotelConfig, clerkId: string)
       data: {
         name: config.name,
         type: config.type,
+        businessMode: config.businessMode,
         // We'll add services and logoUrl later in the Config Panel phase
       }
     });
+
+    // If GASTRONOMY mode, create an initial restaurant automatically
+    if (config.businessMode === "GASTRONOMY") {
+      await prisma.restaurant.create({
+        data: {
+          name: config.name, // Use business name as default restaurant name
+          type: config.type, // Use business type as default restaurant type
+          hotelId: hotel.id
+        }
+      });
+    }
 
     // Update user to link to this hotel and set as ADMIN
     await prisma.user.update({
@@ -40,6 +52,8 @@ export async function updateHotelAction(hotelId: string, data: { name?: string, 
         ...(data.name && { name: data.name }),
         ...(data.type && { type: data.type }),
         ...(data.logoUrl && { logoUrl: data.logoUrl }),
+        // businessMode is usually set at creation and not changed often, 
+        // but it's good to have it here if needed
       }
     });
     revalidatePath("/");

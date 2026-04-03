@@ -25,6 +25,11 @@ enum RoomStatus {
   Mantenimiento
 }
 
+enum BusinessMode {
+  HOSPITALITY
+  GASTRONOMY
+}
+
 enum SubscriptionTier {
   BASIC
   PRO
@@ -34,7 +39,8 @@ enum SubscriptionTier {
 model Hotel {
   id             String           @id @default(auto()) @map("_id") @db.ObjectId
   name           String
-  type           String // Hotel, Hostal, Vivienda
+  type           String // Hotel, Hostal, Vivienda | Restaurante, Bar, Cafetería
+  businessMode   BusinessMode     @default(HOSPITALITY)
   logoUrl        String?
   subscription   SubscriptionTier @default(BASIC)
   connectionCode String?          @unique
