@@ -16,7 +16,7 @@ export default clerkMiddleware(async (auth, request) => {
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'origin-when-cross-origin');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   
   // Content Security Policy (Optimized for Clerk & Turnstile)
   response.headers.set(
@@ -28,7 +28,7 @@ export default clerkMiddleware(async (auth, request) => {
     "style-src 'self' 'unsafe-inline' fonts.googleapis.com; " +
     "img-src 'self' blob: data: img.clerk.com; " +
     "font-src 'self' fonts.gstatic.com; " +
-    "connect-src 'self' *.clerk.accounts.dev *.clerk.com clerk.com;"
+    "connect-src 'self' *.clerk.accounts.dev *.clerk.com clerk.com clerk-telemetry.com *.clerk-telemetry.com;"
   );
 
   return response;
