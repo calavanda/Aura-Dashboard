@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { clsx } from "clsx";
-import { useI18n } from "@/context/I18nContext";
+import { useI18n, Translations } from "@/context/I18nContext";
 import { useAura } from "@/context/AuraContext";
 import { getRestaurantData, updateOrderStatus } from "@/app/actions/restaurant";
 import { 
@@ -36,11 +36,11 @@ export function RestaurantModule() {
     if (!hotelId) return;
     setLoading(true);
     const res = await getRestaurantData(hotelId);
-    if (res.success && res.restaurants) {
+    if (res.success && res.data) {
       setRestaurantData({
-        restaurants: res.restaurants,
-        activeOrders: res.activeOrders || [],
-        inventory: res.inventory || []
+        restaurants: res.data.restaurants,
+        activeOrders: res.data.activeOrders || [],
+        inventory: res.data.inventory || []
       });
     }
     setLoading(false);
@@ -282,14 +282,14 @@ export function RestaurantModule() {
   );
 }
 
-function OrderCard({ order, t, onUpdateStatus }: { order: Order, t: any, onUpdateStatus: () => void }) {
+function OrderCard({ order, t, onUpdateStatus }: { order: Order, t: (key: keyof Translations) => string, onUpdateStatus: () => void }) {
   const statusColors: Record<string, string> = {
     "PENDIENTE": "text-[#FF385C] bg-[#FF385C]/10 border-[#FF385C]/20",
     "PREPARANDO": "text-[#3B82F6] bg-[#3B82F6]/10 border-[#3B82F6]/20",
     "SERVIDO": "text-[#10b981] bg-[#10b981]/10 border-[#10b981]/20",
   };
 
-  const statusMap: Record<string, string> = {
+  const statusMap: Record<string, keyof Translations> = {
     "PENDIENTE": "rest.order.status.pending",
     "PREPARANDO": "rest.order.status.prep",
     "SERVIDO": "rest.order.status.served",

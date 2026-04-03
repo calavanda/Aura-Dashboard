@@ -1,11 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { en } from '../i18n/locales/en';
 import { es } from '../i18n/locales/es';
 
-type Language = 'es' | 'en';
-type Translations = typeof es;
+export type Language = 'es' | 'en';
+export type Translations = typeof es;
 
 interface I18nContextProps {
   language: Language;
@@ -20,18 +20,21 @@ const dictionaries = {
   es
 };
 
-export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>('es');
-  const [mounted, setMounted] = useState(false);
+function getInitialLanguage(): Language {
+  if (typeof window === 'undefined') return 'es';
 
-  useEffect(() => {
-    // Load saved language preference or default to 'es'
-    const savedLang = localStorage.getItem('aura_language') as Language;
-    if (savedLang && (savedLang === 'en' || savedLang === 'es')) {
-      setLanguageState(savedLang);
-    }
-    setMounted(true);
-  }, []);
+  const savedLang = localStorage.getItem('aura_language');
+  if (savedLang === 'en' || savedLang === 'es') return savedLang;
+
+  // Automatic detection from browser language
+  const browserLang = navigator.language.split('-')[0];
+  const detected: Language = browserLang === 'en' ? 'en' : 'es';
+  localStorage.setItem('aura_language', detected);
+  return detected;
+}
+
+export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
