@@ -118,20 +118,20 @@ export function RestaurantModule() {
         </div>
         
         {/* Navigation Tabs */}
-        <div className="flex bg-[#0A0A0A]/80 backdrop-blur-md p-1.5 rounded-full border border-white/5 shadow-2xl">
+        <div className="flex overflow-x-auto no-scrollbar bg-[#0A0A0A]/80 backdrop-blur-md p-1.5 rounded-full border border-white/5 shadow-2xl max-w-full">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={clsx(
-                "px-8 py-3 rounded-full text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 font-institutional flex items-center space-x-2 relative overflow-hidden group",
+                "px-8 py-3 rounded-full text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 font-institutional flex items-center space-x-2 relative overflow-hidden group shrink-0 whitespace-nowrap",
                 activeTab === tab.id 
                   ? "text-white bg-[#FF385C] shadow-[0_0_20px_rgba(255,56,92,0.4)]" 
                   : "text-zinc-500 hover:text-white hover:bg-white/5"
               )}
             >
-              <tab.icon size={12} className={clsx("transition-transform group-hover:scale-110", activeTab === tab.id ? "text-white" : "text-zinc-500")} />
-              <span className="relative z-10">{tab.label}</span>
+              <tab.icon size={12} className={clsx("transition-transform group-hover:scale-110 shrink-0", activeTab === tab.id ? "text-white" : "text-zinc-500")} />
+              <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
             </button>
           ))}
         </div>

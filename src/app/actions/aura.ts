@@ -48,7 +48,7 @@ export async function createHotelWithRooms(config: HotelConfig, clerkId: string)
       }
     });
 
-    await createAuditLog(clerkId, "Hotel Creado", `Establecimiento: ${config.name}`);
+    await createAuditLog(clerkId, config.businessMode === "GASTRONOMY" ? "Restaurante Creado" : "Hotel Creado", `Establecimiento: ${config.name}`);
     revalidatePath("/");
     return { success: true, hotelId: hotel.id };
   } catch {
