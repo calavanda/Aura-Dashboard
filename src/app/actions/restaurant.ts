@@ -211,24 +211,31 @@ export async function updateInventoryItem(hotelId: string, restaurantId: string 
     await verifyAuth(hotelId, ["ADMIN", "GERENTE", "COCINERO"]);
     const validated = InventoryItemSchema.parse(rawData);
     const id = (rawData as { id?: string }).id;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const item = await (prisma.inventoryItem as any).upsert({
-      where: { id: id || "new-item-placeholder" },
-      update: {
-        name: validated.name,
-        quantity: validated.quantity,
-        unit: validated.unit,
-        threshold: validated.threshold,
-        price: validated.price,
-        restaurantId: restaurantId,
-      },
-      create: {
-        ...validated,
-        hotelId,
-        restaurantId
-      }
-    });
+    // Separamos create de update para evitar errores de autoid malformado en MongoDB
+    let item;
+    if (id && id !== "new-item-placeholder") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      item = await (prisma.inventoryItem as any).update({
+        where: { id },
+        data: {
+          name: validated.name,
+          quantity: validated.quantity,
+          unit: validated.unit,
+          threshold: validated.threshold,
+          price: validated.price,
+          restaurantId: restaurantId,
+        }
+      });
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      item = await (prisma.inventoryItem as any).create({
+        data: {
+          ...validated,
+          hotelId,
+          restaurantId
+        }
+      });
+    }
 
     revalidatePath("/");
     return { success: true, data: item as unknown as InventoryItem };
