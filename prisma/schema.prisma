@@ -50,6 +50,7 @@ model Hotel {
   businessMode   BusinessMode     @default(HOSPITALITY)
   logoUrl        String?
   subscription   SubscriptionTier @default(BASIC)
+  services       String[] // Amenidades o servicios extra seleccionados durante onboarding
   connectionCode String?          @unique
   trialStartedAt DateTime         @default(now())
   rooms          Room[]

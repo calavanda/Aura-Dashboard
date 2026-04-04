@@ -20,6 +20,7 @@ export async function createHotelWithRooms(config: HotelConfig, clerkId: string)
         name: config.name,
         type: config.type,
         businessMode: config.businessMode,
+        services: config.services, // Guardamos las amenidades seleccionadas
         // Si el modo es HOSPITALITY, mostramos el módulo de Hotel por defecto
         showHotelModule: config.businessMode === "HOSPITALITY",
         // El módulo de restaurante siempre es opcional pero visible por defecto para ADMIN

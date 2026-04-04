@@ -13,6 +13,7 @@ export interface Hotel {
   businessMode: BusinessMode;
   logoUrl?: string | null;
   subscription: SubscriptionTier;
+  services?: string[]; // Amenidades seleccionadas
   connectionCode?: string | null;
   trialStartedAt: Date;
   showHotelModule?: boolean;

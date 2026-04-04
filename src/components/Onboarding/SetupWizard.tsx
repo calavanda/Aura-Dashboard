@@ -22,6 +22,8 @@ export function SetupWizard() {
     type: "Hotel",
     businessMode: "HOSPITALITY",
     roomsCount: 10,
+    showHotelModule: true,
+    showRestaurantModule: true,
     services: []
   });
 
@@ -47,6 +49,8 @@ export function SetupWizard() {
       ...config,
       businessMode: mode,
       type: mode === "HOSPITALITY" ? "Hotel" : "Restaurante",
+      showHotelModule: mode === "HOSPITALITY",
+      showRestaurantModule: true,
       services: []
     });
     setStep(1);
@@ -256,16 +260,14 @@ export function SetupWizard() {
             </button>
           ) : <div />}
           
-          {step > 0 && (
-            <button 
-              onClick={handleNext}
-              disabled={step === 1 && !config.name}
-              className="bg-primary text-background font-bold px-8 py-4 rounded-2xl hover:brightness-110 transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20"
-            >
-              <span>{step === 3 ? t("setup.finish") : t("setup.next")}</span>
-              <ChevronRight size={18} />
-            </button>
-          )}
+          <button 
+            onClick={handleNext}
+            disabled={step === 1 && !config.name}
+            className="bg-primary text-background font-bold px-8 py-4 rounded-2xl hover:brightness-110 transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20"
+          >
+            <span>{step === 3 ? t("setup.finish") : t("setup.next")}</span>
+            <ChevronRight size={18} />
+          </button>
         </div>
       </motion.div>
     </div>

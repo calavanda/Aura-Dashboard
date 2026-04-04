@@ -37,6 +37,7 @@ export interface HotelConfig {
   roomsCount: number;
   showHotelModule: boolean;
   showRestaurantModule: boolean;
+  services: string[]; // Amenidades seleccionadas
   logoUrl?: string;
 }
 
@@ -108,6 +109,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
           roomsCount: result.rooms?.length || 0,
           showHotelModule: result.hotel.showHotelModule ?? true,
           showRestaurantModule: result.hotel.showRestaurantModule ?? true,
+          services: result.hotel.services || [],
           logoUrl: result.hotel.logoUrl || undefined
         });
         setBusinessMode(result.hotel.businessMode as BusinessMode);
