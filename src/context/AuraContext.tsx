@@ -110,9 +110,18 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
         setBusinessMode(result.hotel.businessMode as BusinessMode);
         setRooms(result.rooms as Room[] || []);
         setReservations(result.reservations as Reservation[] || []);
-        setInventoryItems(result.inventory as InventoryItem[] || []);
-        setRestaurants(result.restaurants as Restaurant[] || []);
-        setActiveOrders(result.hotel.orders as Order[] || []);
+        setInventoryItems(result.hotel.inventory || []);
+        
+        const allRestaurants = result.hotel.restaurants || [];
+        setRestaurants(allRestaurants);
+        
+        // Aggregate all active orders from all restaurants for global view
+        const allActiveOrders = [
+          ...(result.hotel.orders || []),
+          ...allRestaurants.flatMap((r: { orders?: Order[] }) => r.orders || [])
+        ];
+        setActiveOrders(allActiveOrders);
+        
         setLogs(result.logs as AuditLog[] || []);
         const isOwnerUser = result.isOwner || false;
         setIsOwner(isOwnerUser);

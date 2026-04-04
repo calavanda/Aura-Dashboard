@@ -8,6 +8,7 @@ export const OrderItemSchema = z.object({
 
 export const OrderSchema = z.object({
   hotelId: z.string().min(1, "Hotel ID is required"),
+  restaurantId: z.string().optional().nullable(),
   roomNumber: z.string().optional().nullable(),
   items: z.array(OrderItemSchema).min(1, "At least one item is required"),
   total: z.number().nonnegative(),

@@ -18,9 +18,10 @@ import {
 import { useAura } from "@/context/AuraContext";
 import { useI18n } from "@/context/I18nContext";
 import { TeamManagement } from "./Settings/TeamManagement";
+import { ResetBusinessModal } from "./Settings/ResetBusinessModal";
 
 export function SettingsModule() {
-  const { hotelConfig, updateHotel, refreshData, businessMode, role } = useAura();
+  const { hotelConfig, hotelId, updateHotel, refreshData, businessMode, role } = useAura();
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState("GENERAL"); // GENERAL, TEAM
   
@@ -34,6 +35,7 @@ export function SettingsModule() {
   });
 
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   
   const handleSave = async () => {
     setSaveStatus("saving");
@@ -215,6 +217,24 @@ export function SettingsModule() {
                 />
               </div>
             </div>
+
+            {role === "ADMIN" && (
+              <div className="glass p-8 rounded-[40px] border-rose-500/20 bg-rose-500/10 space-y-6">
+                <div className="flex items-center gap-2 text-rose-500">
+                  <AlertTriangle size={20} />
+                  <h4 className="text-lg font-bold font-outfit uppercase tracking-tighter italic">Zona de Peligro</h4>
+                </div>
+                <p className="text-[11px] text-rose-300/80 font-medium leading-relaxed italic">
+                  Si deseas borrar todos los datos de tu {businessMode === "GASTRONOMY" ? "restaurante" : "hotel"} e iniciar desde cero la configuración, puedes reiniciar el negocio por completo. Esta acción eliminará permanentemente menús, habitaciones, finanzas y reservaciones.
+                </p>
+                <button 
+                  onClick={() => setIsResetModalOpen(true)}
+                  className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-rose-600/20"
+                >
+                  Reiniciar Negocio desde Cero
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-6">
@@ -242,6 +262,13 @@ export function SettingsModule() {
           </div>
         </div>
       )}
+
+      <ResetBusinessModal 
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        businessName={hotelConfig?.name || "mi negocio"}
+        hotelId={hotelId || ""}
+      />
     </div>
   );
 }

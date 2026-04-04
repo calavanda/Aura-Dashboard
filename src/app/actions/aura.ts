@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { RoomStatus, PaymentMethod, PaymentStatus, PaymentProvider, AuditLog, BusinessMode } from "@/types";
 import { HotelConfig } from "@/context/AuraContext";
 import { revalidatePath } from "next/cache";
+import { verifyAuth } from "@/lib/auth";
 
 export async function createHotelWithRooms(config: HotelConfig, clerkId: string) {
   try {
@@ -46,6 +47,7 @@ export async function createHotelWithRooms(config: HotelConfig, clerkId: string)
 
 export async function updateHotelAction(hotelId: string, data: { name?: string, type?: string, logoUrl?: string, businessMode?: BusinessMode }) {
   try {
+    await verifyAuth(hotelId, ["ADMIN"]);
     const hotel = await prisma.hotel.update({
       where: { id: hotelId },
       data: {
@@ -65,6 +67,7 @@ export async function updateHotelAction(hotelId: string, data: { name?: string, 
 
 export async function addRoomAction(hotelId: string, roomNumber: string, roomType: string, status?: RoomStatus, price?: number) {
   try {
+    await verifyAuth(hotelId, ["ADMIN", "GERENTE"]);
     const hotel = await prisma.hotel.findUnique({
       where: { id: hotelId },
       include: { rooms: true }
@@ -94,6 +97,10 @@ export async function addRoomAction(hotelId: string, roomNumber: string, roomTyp
 
 export async function deleteRoomAction(roomId: string) {
   try {
+    const room = await prisma.room.findUnique({ where: { id: roomId } });
+    if (!room) return { success: false, error: "Habitación no encontrada" };
+    await verifyAuth(room.hotelId, ["ADMIN", "GERENTE"]);
+
     await prisma.room.delete({
       where: { id: roomId }
     });
@@ -125,9 +132,17 @@ export async function getHotelData(clerkId: string) {
                 }
               }
             },
-            inventory: true,
             restaurants: {
               include: {
+                inventory: true,
+                orders: {
+                  where: { status: { in: ["PENDIENTE", "PREPARANDO"] } },
+                  include: {
+                    items: {
+                      include: { menuItem: true }
+                    }
+                  }
+                },
                 categories: {
                   include: {
                     items: {
@@ -143,13 +158,19 @@ export async function getHotelData(clerkId: string) {
                 }
               }
             },
+            inventory: {
+              where: { restaurantId: null } // General hotel supplies
+            },
             orders: {
-              where: { status: { in: ["PENDIENTE", "PREPARANDO"] } },
-              include: {
-                items: {
-                  include: { menuItem: true }
-                }
-              }
+               where: { 
+                 restaurantId: null,
+                 status: { in: ["PENDIENTE", "PREPARANDO"] } 
+               },
+               include: {
+                 items: {
+                   include: { menuItem: true }
+                 }
+               }
             }
           }
         }
@@ -189,6 +210,7 @@ export async function getHotelData(clerkId: string) {
 
 export async function generateConnectionCodeAction(hotelId: string) {
   try {
+    await verifyAuth(hotelId, ["ADMIN", "GERENTE"]);
     const code = Math.random().toString(36).substring(2, 10).toUpperCase();
     await prisma.hotel.update({
       where: { id: hotelId },
@@ -236,6 +258,7 @@ export async function createAuditLog(clerkId: string, action: string, details?: 
 
 export async function purgeHotelDataAction(hotelId: string, type: "RESERVATIONS" | "LOGS" | "ROOMS" | "ALL") {
   try {
+    await verifyAuth(hotelId, ["ADMIN"]);
     if (type === "RESERVATIONS" || type === "ALL") {
       await prisma.reservation.deleteMany({
         where: { hotelId: hotelId }
@@ -273,6 +296,10 @@ export async function purgeHotelDataAction(hotelId: string, type: "RESERVATIONS"
 
 export async function updateRoomStatusAction(roomId: string, status: string) {
   try {
+    const room = await prisma.room.findUnique({ where: { id: roomId } });
+    if (!room) return { success: false };
+    await verifyAuth(room.hotelId, ["ADMIN", "GERENTE", "COCINERO", "MESERO", "CAJERO"]);
+
     const updatedRoom = await prisma.room.update({
       where: { id: roomId },
       data: { status: status as RoomStatus }
@@ -287,6 +314,10 @@ export async function updateRoomStatusAction(roomId: string, status: string) {
 
 export async function updateRoomAction(roomId: string, data: Partial<{ number: string, type: string, status: string }>) {
   try {
+    const room = await prisma.room.findUnique({ where: { id: roomId } });
+    if (!room) return { success: false };
+    await verifyAuth(room.hotelId, ["ADMIN", "GERENTE"]);
+
     const updatedRoom = await prisma.room.update({
       where: { id: roomId },
       data: {
@@ -315,6 +346,8 @@ export async function addReservationAction(hotelId: string, data: {
   paymentProvider?: string
 }) {
   try {
+    await verifyAuth(hotelId); 
+    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reservation = await (prisma as any).reservation.create({
       data: {
@@ -344,6 +377,10 @@ export async function updateReservationPaymentAction(reservationId: string, data
   amount?: number
 }) {
   try {
+    const res = await (prisma as any).reservation.findUnique({ where: { id: reservationId } });
+    if (!res) return { success: false };
+    await verifyAuth(res.hotelId, ["ADMIN", "GERENTE", "CAJERO"]);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reservation = await (prisma as any).reservation.update({
       where: { id: reservationId },
@@ -363,6 +400,7 @@ export async function updateReservationPaymentAction(reservationId: string, data
 
 export async function validateMasterKeyAction(hotelId: string, key: string) {
   try {
+    await verifyAuth(hotelId, ["ADMIN"]);
     const MASTER_KEY = process.env.AURA_MASTER_KEY || "AURA-OWNER-2026";
     if (key === MASTER_KEY) {
       await prisma.hotel.update({
@@ -422,6 +460,7 @@ export async function checkOrCreateUserAction(clerkId: string, email: string) {
 
 export async function addTeamMember(hotelId: string, email: string, role: string) {
   try {
+    await verifyAuth(hotelId, ["ADMIN", "GERENTE"]);
     // Check if user already exists
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -434,7 +473,7 @@ export async function addTeamMember(hotelId: string, email: string, role: string
       return { success: false, error: "El correo pertenece a un usuario en otro establecimiento" };
     }
 
-    const newUser = await (prisma.user as any).create({
+    const newUser = await (prisma as any).user.create({
       data: {
         email,
         role: role as any,
@@ -464,6 +503,10 @@ export async function getBusinessTeam(hotelId: string) {
 
 export async function removeTeamMember(userId: string) {
   try {
+    const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!targetUser || !targetUser.hotelId) return { success: false };
+    await verifyAuth(targetUser.hotelId, ["ADMIN"]);
+
     await prisma.user.update({
       where: { id: userId },
       data: { hotelId: null, role: "RESERVADOR" } // Unlink rather than delete to preserve history
@@ -472,5 +515,73 @@ export async function removeTeamMember(userId: string) {
     return { success: true };
   } catch {
     return { success: false, error: "Failed to remove member" };
+  }
+}
+export async function resetBusinessAction(hotelId: string, confirmationName: string) {
+  try {
+    await verifyAuth(hotelId, ["ADMIN"]);
+    
+    const hotel = await prisma.hotel.findUnique({
+      where: { id: hotelId }
+    });
+
+    if (!hotel) return { success: false, error: "Negocio no encontrado" };
+
+    // Verify name confirmation
+    if (confirmationName.trim().toLowerCase() !== hotel.name.trim().toLowerCase()) {
+      return { success: false, error: "El nombre de confirmación no coincide" };
+    }
+
+    // Capture restaurant IDs for cleanup
+    const restaurantIds = (await prisma.restaurant.findMany({
+      where: { hotelId },
+      select: { id: true }
+    })).map(r => r.id);
+
+    const p = prisma as any;
+
+    // Atomic transaction to delete EVERYTHING related to the hotel
+    await prisma.$transaction([
+      // 1. Delete dependent child records
+      p.reservation.deleteMany({ where: { hotelId } }),
+      p.room.deleteMany({ where: { hotelId } }),
+      p.inventoryItem.deleteMany({ where: { hotelId } }),
+      p.expense.deleteMany({ where: { hotelId } }),
+      p.device.deleteMany({ where: { hotelId } }),
+      p.auditLog.deleteMany({ where: { user: { hotelId } } }),
+      
+      // 2. Cleanup Restaurant Data
+      p.orderItem.deleteMany({
+        where: { order: { hotelId } }
+      }),
+      p.order.deleteMany({ where: { hotelId } }),
+      
+      p.menuItem.deleteMany({
+        where: { category: { restaurantId: { in: restaurantIds } } }
+      }),
+      p.menuCategory.deleteMany({
+        where: { restaurantId: { in: restaurantIds } }
+      }),
+      p.restaurant.deleteMany({
+        where: { hotelId }
+      }),
+
+      // 3. Dissociate ALL users from this hotel (Admin included)
+      p.user.updateMany({
+        where: { hotelId },
+        data: { hotelId: null, role: "RESERVADOR" }
+      }),
+
+      // 4. Finally, delete the hotel record
+      p.hotel.delete({
+        where: { id: hotelId }
+      })
+    ]);
+
+    revalidatePath("/");
+    return { success: true };
+  } catch (err: unknown) {
+    console.error("Error resetting business:", err);
+    return { success: false, error: err instanceof Error ? err.message : "Error interno del servidor" };
   }
 }

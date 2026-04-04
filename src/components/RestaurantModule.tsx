@@ -36,6 +36,7 @@ export function RestaurantModule() {
     return "ORDERS";
   });
 
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
   const [restaurantData, setRestaurantData] = useState<{
     restaurants: Restaurant[];
     activeOrders: Order[];
@@ -50,27 +51,31 @@ export function RestaurantModule() {
   const loadData = useCallback(async () => {
     if (!hotelId) return;
     setLoading(true);
-    const res = await getRestaurantData(hotelId);
-    if (res.success && res.data) {
-      setRestaurantData({
-        restaurants: res.data.restaurants,
-        activeOrders: res.data.activeOrders || [],
-        inventory: res.data.inventory || []
-      });
+    try {
+      const res = await getRestaurantData(hotelId, selectedRestaurantId || undefined);
+      if (res.success && res.data) {
+        setRestaurantData({
+          restaurants: res.data.restaurants,
+          activeOrders: res.data.activeOrders || [],
+          inventory: res.data.inventory || []
+        });
+      }
+    } finally {
+      setLoading(false);
+      refreshData();
     }
-    setLoading(false);
-    refreshData();
-  }, [hotelId, refreshData]);
+  }, [hotelId, selectedRestaurantId, refreshData]);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      if (mounted) {
-        await loadData();
-      }
-    })();
-    return () => { mounted = false; };
+    loadData();
   }, [loadData]);
+
+  // Auto-select first restaurant once data is loaded
+  useEffect(() => {
+    if (!selectedRestaurantId && restaurantData && restaurantData.restaurants.length > 0) {
+      setSelectedRestaurantId(restaurantData.restaurants[0].id);
+    }
+  }, [selectedRestaurantId, restaurantData]);
 
   const tabs = [
     { id: "ORDERS", label: t("rest.tab.orders"), icon: ClipboardList, roles: ["ADMIN", "GERENTE", "CAJERO", "MESERO"] },
@@ -83,11 +88,33 @@ export function RestaurantModule() {
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 px-2">
-        <div>
-          <h3 className="text-4xl font-black tracking-tighter text-white font-institutional">{t("rest.title")}</h3>
-          <p className="text-zinc-500 text-[10px] uppercase font-institutional tracking-[0.3em] font-black mt-2">
-            {t("rest.subtitle")}
-          </p>
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <div>
+            <h3 className="text-4xl font-black tracking-tighter text-white font-institutional">{t("rest.title")}</h3>
+            <p className="text-zinc-500 text-[10px] uppercase font-institutional tracking-[0.3em] font-black mt-2">
+              {t("rest.subtitle")}
+            </p>
+          </div>
+          
+          {/* Restaurant Selector */}
+          {restaurantData?.restaurants && restaurantData.restaurants.length > 1 && (
+            <div className="flex gap-2 p-1.5 glass rounded-2xl border border-white/5 ml-0 md:ml-4">
+              {restaurantData.restaurants.map(r => (
+                <button
+                  key={r.id}
+                  onClick={() => setSelectedRestaurantId(r.id)}
+                  className={clsx(
+                    "px-4 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all",
+                    selectedRestaurantId === r.id 
+                      ? "bg-white/10 text-white border border-white/10" 
+                      : "text-zinc-500 hover:text-white"
+                  )}
+                >
+                  {r.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* Navigation Tabs */}
@@ -118,7 +145,11 @@ export function RestaurantModule() {
         <AnimatePresence mode="wait">
           {activeTab === "KDS" && (
              <motion.div key="kds" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-               <KDSModule />
+               <KDSModule 
+                 restaurantId={selectedRestaurantId} 
+                 orders={restaurantData?.activeOrders} 
+                 onRefresh={loadData} 
+               />
              </motion.div>
           )}
 
@@ -235,7 +266,7 @@ export function RestaurantModule() {
                 )}
               </div>
 
-              {restaurantData?.restaurants?.map((rest: Restaurant) => (
+              {restaurantData?.restaurants?.filter(r => !selectedRestaurantId || r.id === selectedRestaurantId).map((rest: Restaurant) => (
                 <div key={rest.id} className="space-y-6">
                   <div className="flex items-center space-x-4 border-b border-white/5 pb-4">
                     <h5 className="text-xl font-black text-white tracking-tighter uppercase">{rest.name}</h5>
@@ -352,6 +383,7 @@ export function RestaurantModule() {
         isOpen={isInventoryModalOpen}
         onClose={() => setIsInventoryModalOpen(false)}
         hotelId={hotelId || ""}
+        restaurantId={selectedRestaurantId}
         onSuccess={loadData}
       />
 
@@ -362,12 +394,13 @@ export function RestaurantModule() {
             onClose={() => setIsOrderModalOpen(false)}
             restaurants={restaurantData.restaurants}
             hotelId={hotelId || ""}
+            restaurantId={selectedRestaurantId || ""}
             onSuccess={loadData}
           />
           <AddMenuItemModal 
             isOpen={isMenuModalOpen}
             onClose={() => setIsMenuModalOpen(false)}
-            restaurant={restaurantData.restaurants[0]}
+            restaurant={restaurantData.restaurants.find(r => r.id === selectedRestaurantId) || restaurantData.restaurants[0]}
             onSuccess={loadData}
           />
         </>

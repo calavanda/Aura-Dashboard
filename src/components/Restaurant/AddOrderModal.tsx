@@ -13,10 +13,11 @@ interface AddOrderModalProps {
   onClose: () => void;
   restaurants: Restaurant[];
   hotelId: string;
+  restaurantId: string;
   onSuccess: () => void;
 }
 
-export function AddOrderModal({ isOpen, onClose, restaurants, hotelId, onSuccess }: AddOrderModalProps) {
+export function AddOrderModal({ isOpen, onClose, restaurants, hotelId, restaurantId, onSuccess }: AddOrderModalProps) {
   const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState("");
   const [roomNumber, setRoomNumber] = useState("");
@@ -25,25 +26,26 @@ export function AddOrderModal({ isOpen, onClose, restaurants, hotelId, onSuccess
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Flatten all menu items from all restaurants
-  const allMenuItems = useMemo(() => {
+  // Filter menu items for the selected restaurant
+  const filteredMenuItemsByRestaurant = useMemo(() => {
     const items: MenuItem[] = [];
-    restaurants.forEach(rest => {
-      rest.categories?.forEach(cat => {
+    const activeRest = restaurants.find(r => r.id === restaurantId);
+    if (activeRest) {
+      activeRest.categories?.forEach(cat => {
         cat.items?.forEach(item => {
           items.push(item);
         });
       });
-    });
+    }
     return items;
-  }, [restaurants]);
+  }, [restaurants, restaurantId]);
 
   const filteredItems = useMemo(() => {
-    if (!searchTerm) return allMenuItems.slice(0, 8);
-    return allMenuItems.filter(item => 
+    if (!searchTerm) return filteredMenuItemsByRestaurant.slice(0, 8);
+    return filteredMenuItemsByRestaurant.filter(item => 
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
     ).slice(0, 10);
-  }, [allMenuItems, searchTerm]);
+  }, [filteredMenuItemsByRestaurant, searchTerm]);
 
   const updateQuantity = (item: MenuItem, delta: number) => {
     setBasket(prev => {
@@ -80,7 +82,7 @@ export function AddOrderModal({ isOpen, onClose, restaurants, hotelId, onSuccess
         price: entry.item.price
       }));
 
-      const res = await processOrder(hotelId, {
+      const res = await processOrder(hotelId, restaurantId, {
         roomNumber: roomNumber || "Salón",
         items: orderItems,
         total: basketTotal,

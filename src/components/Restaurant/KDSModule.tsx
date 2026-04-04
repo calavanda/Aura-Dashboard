@@ -14,20 +14,34 @@ import { useAura } from "@/context/AuraContext";
 import { updateOrderStatus } from "@/app/actions/restaurant";
 import { Order } from "@/types";
 
-export function KDSModule() {
+interface KDSModuleProps {
+  restaurantId?: string | null;
+  orders?: Order[];
+  onRefresh?: () => void;
+}
+
+export function KDSModule({ restaurantId, orders, onRefresh }: KDSModuleProps) {
   const { activeOrders: allOrders, refreshData } = useAura();
   const [loading, setLoading] = useState(false);
 
-  // Filter for orders that need kitchen attention (locally from global state)
-  const activeOrders = allOrders.filter(o => 
-    ["PENDIENTE", "PREPARANDO"].includes(o.status || "")
+  // Use provided orders or fallback to global ones
+  const sourceOrders = orders || allOrders;
+
+  // Filter for orders that need kitchen attention AND match the restaurant
+  const activeOrders = sourceOrders.filter(o => 
+    ["PENDIENTE", "PREPARANDO"].includes(o.status || "") &&
+    (!restaurantId || o.restaurantId === restaurantId)
   );
 
   const handleStatusUpdate = async (orderId: string, nextStatus: string) => {
     setLoading(true);
     const res = await updateOrderStatus(orderId, nextStatus);
     if (res.success) {
-      await refreshData();
+      if (onRefresh) {
+        onRefresh();
+      } else {
+        await refreshData();
+      }
     }
     setLoading(false);
   };

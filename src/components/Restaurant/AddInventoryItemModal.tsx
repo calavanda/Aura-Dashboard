@@ -9,10 +9,11 @@ interface AddInventoryItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   hotelId: string;
+  restaurantId: string | null;
   onSuccess: () => void;
 }
 
-export function AddInventoryItemModal({ isOpen, onClose, hotelId, onSuccess }: AddInventoryItemModalProps) {
+export function AddInventoryItemModal({ isOpen, onClose, hotelId, restaurantId, onSuccess }: AddInventoryItemModalProps) {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("kg");
@@ -28,7 +29,7 @@ export function AddInventoryItemModal({ isOpen, onClose, hotelId, onSuccess }: A
     setIsSubmitting(true);
 
     try {
-      const res = await updateInventoryItem(hotelId, {
+      const res = await updateInventoryItem(hotelId, restaurantId, {
         name,
         quantity: parseFloat(quantity),
         unit,

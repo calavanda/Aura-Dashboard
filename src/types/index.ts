@@ -53,6 +53,8 @@ export interface Restaurant {
   type: string;
   hotelId: string;
   categories?: MenuCategory[];
+  inventory?: InventoryItem[];
+  orders?: Order[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -86,6 +88,7 @@ export interface MenuRecipeIngredient {
 export interface Order {
   id: string;
   hotelId: string;
+  restaurantId?: string | null;
   roomNumber?: string | null;
   items: OrderItem[];
   total: number;
@@ -112,6 +115,7 @@ export interface InventoryItem {
   unit: string;
   threshold: number;
   hotelId: string;
+  restaurantId?: string | null;
   price: number;
   updatedAt: Date;
 }

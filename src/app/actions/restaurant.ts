@@ -17,7 +17,7 @@ import {
   MenuItemSchema
 } from "@/lib/validation";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
+import { verifyAuth } from "@/lib/auth";
 
 /**
  * Standardized Error Creator
@@ -26,41 +26,39 @@ function createError<T>(message: string, code?: string): ActionResponse<T> {
   return { success: false, error: message, code };
 }
 
-export async function getRestaurantData(hotelId: string): Promise<ActionResponse<{
+export async function getRestaurantData(hotelId: string, restaurantId?: string): Promise<ActionResponse<{
   restaurants: Restaurant[],
   activeOrders: Order[],
   inventory: InventoryItem[]
 }>> {
   try {
+    await verifyAuth(hotelId);
+    
     const restaurants = await prisma.restaurant.findMany({
-      where: { hotelId },
-      include: {
-        categories: {
-          include: {
-            items: true
-          }
-        }
-      }
+      where: { hotelId }
     }) as unknown as Restaurant[];
 
-    const activeOrders = await prisma.order.findMany({
+    // If no restaurantId provided, pick the first one as default
+    const targetRestaurantId = restaurantId || (restaurants.length > 0 ? restaurants[0].id : undefined);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const activeOrders = targetRestaurantId ? await (prisma.order as any).findMany({
       where: { 
-        hotelId,
+        restaurantId: targetRestaurantId,
         status: { in: ["PENDIENTE", "PREPARANDO", "SERVIDO"] }
       },
       include: {
         items: {
-          include: {
-            menuItem: true
-          }
+          include: { menuItem: true }
         }
       },
       orderBy: { createdAt: "desc" }
-    }) as unknown as Order[];
+    }) as unknown as Order[] : [];
 
-    const inventory = await prisma.inventoryItem.findMany({
-      where: { hotelId }
-    }) as unknown as InventoryItem[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const inventory = targetRestaurantId ? await (prisma.inventoryItem as any).findMany({
+      where: { restaurantId: targetRestaurantId }
+    }) as unknown as InventoryItem[] : [];
 
     return { 
       success: true, 
@@ -74,13 +72,14 @@ export async function getRestaurantData(hotelId: string): Promise<ActionResponse
 
 export async function createRestaurant(hotelId: string, name: string, type: string): Promise<ActionResponse<Restaurant>> {
   try {
+    const user = await verifyAuth(hotelId, ["ADMIN", "GERENTE"]);
     const restaurant = await prisma.restaurant.create({
       data: { name, type, hotelId }
     });
     
     await prisma.auditLog.create({
       data: {
-        userId: (await getUserId()) || "",
+        userId: user.id || "",
         action: "CREATE_RESTAURANT",
         details: `Created restaurant: ${name}`,
       }
@@ -93,10 +92,12 @@ export async function createRestaurant(hotelId: string, name: string, type: stri
   }
 }
 
-export async function processOrder(hotelId: string, rawData: unknown): Promise<ActionResponse<Order>> {
+export async function processOrder(hotelId: string, restaurantId: string, rawData: unknown): Promise<ActionResponse<Order>> {
   try {
+    const user = await verifyAuth(hotelId);
+    const userId = user.id;
     // 1. Validate Input
-    const validated = OrderSchema.parse({ ...(rawData as object), hotelId });
+    const validated = OrderSchema.parse({ ...(rawData as object), hotelId, restaurantId });
 
     // 2. Start Transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -133,7 +134,7 @@ export async function processOrder(hotelId: string, rawData: unknown): Promise<A
           if (updatedItem.quantity <= updatedItem.threshold) {
              await tx.auditLog.create({
                data: {
-                 userId: (await getUserId()) || "",
+                 userId: userId || "",
                  action: "LOW_STOCK_ALERT",
                  details: `¡ALERTA!: ${updatedItem.name} bajo en stock (${updatedItem.quantity}${updatedItem.unit}). Umbral: ${updatedItem.threshold}${updatedItem.unit}.`
                }
@@ -143,9 +144,11 @@ export async function processOrder(hotelId: string, rawData: unknown): Promise<A
       }
 
       // 4. Create Order
-      const order = await tx.order.create({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const order = await (tx as any).order.create({
         data: {
           hotelId: validated.hotelId,
+          restaurantId: validated.restaurantId,
           roomNumber: validated.roomNumber,
           total: validated.total,
           status: "PENDIENTE",
@@ -184,16 +187,14 @@ export async function processOrder(hotelId: string, rawData: unknown): Promise<A
   }
 }
 
-// Helper to get current user ID
-async function getUserId() {
-  const { userId: clerkId } = await auth();
-  if (!clerkId) return null;
-  const user = await prisma.user.findUnique({ where: { clerkId } });
-  return user?.id;
-}
+
 
 export async function updateOrderStatus(orderId: string, status: string): Promise<ActionResponse> {
   try {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) return createError("Orden no encontrada");
+    await verifyAuth(order.hotelId);
+
     await prisma.order.update({
       where: { id: orderId },
       data: { status }
@@ -205,12 +206,14 @@ export async function updateOrderStatus(orderId: string, status: string): Promis
   }
 }
 
-export async function updateInventoryItem(hotelId: string, rawData: unknown): Promise<ActionResponse<InventoryItem>> {
+export async function updateInventoryItem(hotelId: string, restaurantId: string | null, rawData: unknown): Promise<ActionResponse<InventoryItem>> {
   try {
+    await verifyAuth(hotelId, ["ADMIN", "GERENTE", "COCINERO"]);
     const validated = InventoryItemSchema.parse(rawData);
     const id = (rawData as { id?: string }).id;
 
-    const item = await prisma.inventoryItem.upsert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const item = await (prisma.inventoryItem as any).upsert({
       where: { id: id || "new-item-placeholder" },
       update: {
         name: validated.name,
@@ -218,10 +221,12 @@ export async function updateInventoryItem(hotelId: string, rawData: unknown): Pr
         unit: validated.unit,
         threshold: validated.threshold,
         price: validated.price,
+        restaurantId: restaurantId,
       },
       create: {
         ...validated,
-        hotelId
+        hotelId,
+        restaurantId
       }
     });
 
@@ -237,6 +242,10 @@ export async function updateInventoryItem(hotelId: string, rawData: unknown): Pr
 
 export async function createMenuCategory(restaurantId: string, name: string): Promise<ActionResponse<MenuCategory>> {
   try {
+    const rest = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+    if (!rest) return createError("Restaurante no encontrado");
+    await verifyAuth(rest.hotelId, ["ADMIN", "GERENTE", "COCINERO"]);
+
     const category = await prisma.menuCategory.create({
       data: { name, restaurantId }
     });
@@ -250,6 +259,8 @@ export async function createMenuCategory(restaurantId: string, name: string): Pr
 
 export async function createMenuItem(hotelId: string, rawData: unknown): Promise<ActionResponse<MenuItem>> {
   try {
+    const user = await verifyAuth(hotelId, ["ADMIN", "GERENTE", "COCINERO"]);
+    const userId = user.id;
     const validated = MenuItemSchema.parse(rawData);
     
     // We handle the recipe separately to use Prisma's specialized 'create' syntax for relations
@@ -270,7 +281,7 @@ export async function createMenuItem(hotelId: string, rawData: unknown): Promise
 
     await prisma.auditLog.create({
       data: {
-        userId: (await getUserId()) || "",
+        userId: userId || "",
         action: "CREATE_MENU_ITEM",
         details: `Created dish: ${validated.name}`,
       }
