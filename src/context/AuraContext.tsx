@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { 
   addRoomAction, 
@@ -90,72 +90,81 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [logs, setLogs] = useState<AuditLog[]>([]);
 
-  useEffect(() => {
-    async function hydrate() {
-      if (user) {
-        // Ensure user exists in local DB
-        const userRes = await checkOrCreateUserAction(user.id, user.primaryEmailAddress?.emailAddress || "");
-        if (userRes.success && userRes.user) {
-          setRole(userRes.user.role as Role);
-        }
+  const hydrate = useCallback(async () => {
+    if (user) {
+      const userRes = await checkOrCreateUserAction(user.id, user.primaryEmailAddress?.emailAddress || "");
+      if (userRes.success && userRes.user) {
+        setRole(userRes.user.role as Role);
+      }
+      
+      const result = await getHotelData(user.id);
+      if (result.success && result.hotel) {
+        setHotelConfig({
+          name: result.hotel.name,
+          type: result.hotel.type,
+          businessMode: result.hotel.businessMode as BusinessMode,
+          roomsCount: result.rooms?.length || 0,
+          services: [],
+          logoUrl: result.hotel.logoUrl || undefined
+        });
+        setBusinessMode(result.hotel.businessMode as BusinessMode);
+        setRooms(result.rooms as Room[] || []);
+        setReservations(result.reservations as Reservation[] || []);
+        setInventoryItems(result.inventory as InventoryItem[] || []);
+        setRestaurants(result.restaurants as Restaurant[] || []);
+        setActiveOrders(result.hotel.orders as Order[] || []);
+        setLogs(result.logs as AuditLog[] || []);
+        const isOwnerUser = result.isOwner || false;
+        setIsOwner(isOwnerUser);
+        const hotel = result.hotel as Hotel;
+        setSubscription(isOwnerUser ? "ENTERPRISE" : (hotel.subscription || "BASIC"));
+        setConnectionCode(hotel.connectionCode || null);
         
-        const result = await getHotelData(user.id);
-        if (result.success && result.hotel) {
-          setHotelConfig({
-            name: result.hotel.name,
-            type: result.hotel.type,
-            businessMode: result.hotel.businessMode as BusinessMode,
-            roomsCount: result.rooms?.length || 0,
-            services: [],
-            logoUrl: result.hotel.logoUrl || undefined
-          });
-          setBusinessMode(result.hotel.businessMode as BusinessMode);
-          setRooms(result.rooms as Room[] || []);
-          setReservations(result.reservations as Reservation[] || []);
-          setInventoryItems(result.inventory as InventoryItem[] || []);
-          setRestaurants(result.restaurants as Restaurant[] || []);
-          setActiveOrders(result.hotel.orders as Order[] || []);
-          setLogs(result.logs as AuditLog[] || []);
-          const isOwnerUser = result.isOwner || false;
-          setIsOwner(isOwnerUser);
-          const hotel = result.hotel as Hotel;
-          setSubscription(isOwnerUser ? "ENTERPRISE" : (hotel.subscription || "BASIC"));
-          setConnectionCode(hotel.connectionCode || null);
-          
-          // Trial Logic
-          const trialStart = new Date(hotel.trialStartedAt || hotel.createdAt);
-          const now = new Date();
-          const diffDays = Math.max(0, 15 - Math.ceil((now.getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24)));
-          setTrialDaysLeft(diffDays);
+        const trialStart = new Date(hotel.trialStartedAt || hotel.createdAt);
+        const now = new Date();
+        const diffDays = Math.max(0, 15 - Math.ceil((now.getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24)));
+        setTrialDaysLeft(diffDays);
 
-          setIsSetupComplete(true);
-          setHotelId(result.hotel.id);
-        }
+        setIsSetupComplete(true);
+        setHotelId(result.hotel.id);
       }
     }
-    hydrate();
   }, [user]);
 
-  const addRoom = async (roomData: { number: string, type: string, status?: RoomStatus }) => {
-    const result = await addRoomAction(hotelId!, roomData.number, roomData.type, roomData.status);
+  useEffect(() => {
+    let isMounted = true;
+    const init = async () => {
+      await Promise.resolve();
+      if (isMounted) {
+        hydrate();
+      }
+    };
+    init();
+    return () => { isMounted = false; };
+  }, [hydrate]);
+
+  const addRoom = useCallback(async (roomData: { number: string, type: string, status?: RoomStatus }) => {
+    if (!hotelId) return { success: false, error: "No hotel ID" };
+    const result = await addRoomAction(hotelId, roomData.number, roomData.type, roomData.status);
     if (result.success && result.room) {
       setRooms(prev => [...prev, result.room as Room]);
       return { success: true };
     }
     return { success: false, error: result.error };
-  };
+  }, [hotelId]);
 
-  const updateHotel = async (data: { name?: string, type?: string, logoUrl?: string, businessMode?: BusinessMode }) => {
+  const updateHotel = useCallback(async (data: { name?: string, type?: string, logoUrl?: string, businessMode?: BusinessMode }) => {
     if (!hotelId) return { success: false, error: "No hotel ID" };
     const res = await updateHotelAction(hotelId, data);
     if (res.success && res.hotel) {
-      setHotelConfig(prev => prev ? { ...prev, ...data } : null);
+      setHotelConfig(prev => prev ? ({ ...prev, ...data }) : null);
+      if (data.businessMode) setBusinessMode(data.businessMode);
       return { success: true };
     }
-    return res;
-  };
+    return { success: false, error: res.error };
+  }, [hotelId]);
 
-  const applyMasterKey = async (key: string) => {
+  const applyMasterKey = useCallback(async (key: string) => {
     if (!hotelId) return { success: false, error: "No hotel identified" };
     const res = await validateMasterKeyAction(hotelId, key);
     if (res.success) {
@@ -164,33 +173,33 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
         return { success: true };
     }
     return res;
-  };
+  }, [hotelId]);
 
-  const updateRoom = async (id: string, updates: Partial<Room>) => {
+  const updateRoom = useCallback(async (id: string, updates: Partial<Room>) => {
     const res = await updateRoomAction(id, updates);
     if (res.success) {
       setRooms(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
     }
-  };
+  }, []);
 
-  const deleteRoom = async (id: string) => {
+  const deleteRoom = useCallback(async (id: string) => {
     const result = await deleteRoomAction(id);
     if (result.success) {
       setRooms(prev => prev.filter(r => r.id !== id));
     }
-  };
+  }, []);
 
-  const clearRooms = async () => {
+  const clearRooms = useCallback(async () => {
     if (!hotelId) return;
-    const res = await purgeHotelDataAction(hotelId, "ALL"); // Purge all will include rooms if I update the action
+    const res = await purgeHotelDataAction(hotelId, "ALL"); 
     if (res.success) {
       setRooms([]);
       setReservations([]);
       setLogs([]);
     }
-  };
+  }, [hotelId]);
 
-  const toggleRoomStatus = async (id: string) => {
+  const toggleRoomStatus = useCallback(async (id: string) => {
     const room = rooms.find(r => r.id === id);
     if (!room) return;
 
@@ -206,9 +215,9 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     if (res.success) {
       setRooms(prev => prev.map(room => room.id === id ? { ...room, status: newStatus } : room));
     }
-  };
+  }, [rooms]);
 
-  const addReservation = async (resData: Omit<Reservation, "id">) => {
+  const addReservation = useCallback(async (resData: Omit<Reservation, "id">) => {
     if (!hotelId) return;
     const result = await addReservationAction(hotelId, {
       guestName: resData.guestName,
@@ -224,9 +233,9 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     if (result.success && result.reservation) {
       setReservations(prev => [result.reservation as Reservation, ...prev]);
     }
-  };
+  }, [hotelId]);
 
-  const updateReservationPayment = async (id: string, data: { paymentStatus: string, paymentMethod: string, amount?: number }) => {
+  const updateReservationPayment = useCallback(async (id: string, data: { paymentStatus: string, paymentMethod: string, amount?: number }) => {
     const result = await updateReservationPaymentAction(id, data);
     if (result.success && result.reservation) {
       setReservations(prev => prev.map(res => 
@@ -235,9 +244,9 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
       return { success: true };
     }
     return { success: false, error: "Failed to update payment" };
-  };
+  }, []);
 
-  const purgeData = async (type: "RESERVATIONS" | "LOGS" | "ALL") => {
+  const purgeData = useCallback(async (type: "RESERVATIONS" | "LOGS" | "ALL") => {
     if (!hotelId) return { success: false, error: "No hotel identified" };
     const result = await purgeHotelDataAction(hotelId, type);
     if (result.success) {
@@ -246,52 +255,22 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
       return { success: true };
     }
     return { success: false, error: result.error };
-  };
+  }, [hotelId]);
 
-  const completeSetup = async (config: HotelConfig) => {
+  const completeSetup = useCallback(async (config: HotelConfig) => {
     if (!user) return;
     const result = await createHotelWithRooms(config, user.id);
     if (result.success && result.hotelId) {
       setHotelConfig(config);
       setIsSetupComplete(true);
       setHotelId(result.hotelId);
-      setRole("ADMIN"); // The one completing setup is always ADMIN
+      setRole("ADMIN");
     }
-  };
+  }, [user]);
 
-  const refreshData = async () => {
-    if (user?.id) {
-      const result = await getHotelData(user.id);
-      if (result.success && result.hotel) {
-        setHotelConfig({
-          name: result.hotel.name,
-          type: result.hotel.type,
-          businessMode: result.hotel.businessMode as BusinessMode,
-          roomsCount: result.rooms?.length || 0,
-          services: [] // We can expand this later
-        });
-        setBusinessMode(result.hotel.businessMode as BusinessMode);
-        setRooms(result.rooms as Room[] || []);
-        setReservations(result.reservations as Reservation[] || []);
-        setInventoryItems(result.inventory as InventoryItem[] || []);
-        setRestaurants(result.restaurants as Restaurant[] || []);
-        setActiveOrders(result.hotel.orders as Order[] || []);
-        setLogs(result.logs as AuditLog[] || []);
-        
-        const isOwnerUser = result.isOwner || false;
-        setIsOwner(isOwnerUser);
-        const hotel = result.hotel as Hotel;
-        setSubscription(isOwnerUser ? "ENTERPRISE" : (hotel.subscription || "BASIC"));
-        setConnectionCode(hotel.connectionCode || null);
-        
-        const trialStart = new Date(hotel.trialStartedAt || hotel.createdAt);
-        const diffDays = Math.max(0, 15 - Math.ceil((new Date().getTime() - trialStart.getTime()) / (1000 * 60 * 60 * 24)));
-        setTrialDaysLeft(diffDays);
-
-        setHotelId(hotel.id);
-      }
-    }
-  };
+  const refreshData = useCallback(async () => {
+    await hydrate();
+  }, [hydrate]);
 
   return (
     <AuraContext.Provider value={{ 

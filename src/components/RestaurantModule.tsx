@@ -54,11 +54,16 @@ export function RestaurantModule() {
   }, [hotelId, refreshData]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      loadData();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [loadData]);
+    let isMounted = true;
+    const init = async () => {
+      await Promise.resolve();
+      if (hotelId && isMounted) {
+        loadData();
+      }
+    };
+    init();
+    return () => { isMounted = false; };
+  }, [hotelId, loadData]);
 
   const tabs = [
     { id: "ORDERS", label: t("rest.tab.orders"), icon: ClipboardList },
