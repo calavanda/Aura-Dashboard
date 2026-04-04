@@ -35,7 +35,8 @@ export interface HotelConfig {
   type: string; // Hotel, Hostal, Vivienda, Restaurante, etc.
   businessMode: BusinessMode;
   roomsCount: number;
-  services: string[]; // Restaurant, Pool, etc.
+  showHotelModule: boolean;
+  showRestaurantModule: boolean;
   logoUrl?: string;
 }
 
@@ -67,6 +68,7 @@ interface AuraContextType {
   addReservation: (res: Omit<Reservation, "id">) => void;
   updateReservationPayment: (id: string, data: { paymentStatus: string, paymentMethod: string, amount?: number }) => Promise<{ success: boolean, error?: string }>;
   completeSetup: (config: HotelConfig) => Promise<void>;
+  updateModuleVisibility: (hotelModule: boolean, restaurantModule: boolean) => Promise<{ success: boolean, error?: string }>;
   purgeData: (type: "RESERVATIONS" | "LOGS" | "ALL") => Promise<{ success: boolean, error?: string }>;
 }
 
@@ -104,7 +106,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
           type: result.hotel.type,
           businessMode: result.hotel.businessMode as BusinessMode,
           roomsCount: result.rooms?.length || 0,
-          services: [],
+          showHotelModule: result.hotel.showHotelModule ?? true,
+          showRestaurantModule: result.hotel.showRestaurantModule ?? true,
           logoUrl: result.hotel.logoUrl || undefined
         });
         setBusinessMode(result.hotel.businessMode as BusinessMode);
@@ -277,6 +280,18 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
+  const updateModuleVisibilityInternal = useCallback(async (hotelModule: boolean, restaurantModule: boolean) => {
+    if (!hotelId) return { success: false, error: "No hotel ID" };
+    // Import delayed to avoid circular deps if any, but regular import is fine here
+    const { updateModuleVisibility } = await import("@/app/actions/aura");
+    const res = await updateModuleVisibility(hotelId, hotelModule, restaurantModule);
+    if (res.success) {
+      setHotelConfig(prev => prev ? ({ ...prev, showHotelModule: hotelModule, showRestaurantModule: restaurantModule }) : null);
+      return { success: true };
+    }
+    return { success: false, error: res.error };
+  }, [hotelId]);
+
   const refreshData = useCallback(async () => {
     await hydrate();
   }, [hydrate]);
@@ -309,7 +324,8 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
       addReservation, 
       completeSetup,
       purgeData,
-      updateReservationPayment
+      updateReservationPayment,
+      updateModuleVisibility: updateModuleVisibilityInternal
     }}>
       {children}
     </AuraContext.Provider>

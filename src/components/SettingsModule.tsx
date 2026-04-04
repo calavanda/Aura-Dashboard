@@ -13,7 +13,8 @@ import {
   Camera,
   AlertTriangle,
   Coffee,
-  Utensils
+  Utensils,
+  Layers
 } from "lucide-react";
 import { useAura } from "@/context/AuraContext";
 import { useI18n } from "@/context/I18nContext";
@@ -21,7 +22,7 @@ import { TeamManagement } from "./Settings/TeamManagement";
 import { ResetBusinessModal } from "./Settings/ResetBusinessModal";
 
 export function SettingsModule() {
-  const { hotelConfig, hotelId, updateHotel, refreshData, businessMode, role } = useAura();
+  const { hotelConfig, hotelId, updateHotel, updateModuleVisibility, refreshData, businessMode, role } = useAura();
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState("GENERAL"); // GENERAL, TEAM
   
@@ -31,7 +32,9 @@ export function SettingsModule() {
     logoUrl: hotelConfig?.logoUrl || "",
     businessMode: businessMode,
     notifications: typeof window !== "undefined" ? localStorage.getItem("aura_prefs_notif") !== "false" : true,
-    publicWeb: typeof window !== "undefined" ? localStorage.getItem("aura_prefs_sync") !== "false" : true
+    publicWeb: typeof window !== "undefined" ? localStorage.getItem("aura_prefs_sync") !== "false" : true,
+    showHotelModule: hotelConfig?.showHotelModule ?? true,
+    showRestaurantModule: hotelConfig?.showRestaurantModule ?? true
   });
 
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -45,7 +48,11 @@ export function SettingsModule() {
       logoUrl: formData.logoUrl,
       businessMode: formData.businessMode
     });
-    if (res.success) {
+    
+    // Update Module Visibility
+    const visRes = await updateModuleVisibility(formData.showHotelModule, formData.showRestaurantModule);
+
+    if (res.success && visRes.success) {
       if (typeof window !== "undefined") {
         localStorage.setItem("aura_prefs_notif", formData.notifications.toString());
         localStorage.setItem("aura_prefs_sync", formData.publicWeb.toString());
@@ -219,21 +226,48 @@ export function SettingsModule() {
             </div>
 
             {role === "ADMIN" && (
-              <div className="glass p-8 rounded-[40px] border-rose-500/20 bg-rose-500/10 space-y-6">
-                <div className="flex items-center gap-2 text-rose-500">
-                  <AlertTriangle size={20} />
-                  <h4 className="text-lg font-bold font-outfit uppercase tracking-tighter italic">Zona de Peligro</h4>
+              <>
+                <div className="glass p-8 rounded-[40px] space-y-6">
+                  <h4 className="text-lg font-bold font-outfit flex items-center gap-2 text-white">
+                    <Layers size={20} className="text-primary" />
+                    Gestión de Módulos
+                  </h4>
+                  <p className="text-[10px] text-zinc-500 italic pl-1">Activa o desactiva las secciones de tu Dashboard según tu necesidad.</p>
+                  <div className="space-y-4 font-outfit">
+                    <ToggleRow 
+                      icon={Building2} 
+                      title="Módulo de Hotel" 
+                      desc="Habilita reservaciones y gestión de habitaciones." 
+                      active={formData.showHotelModule}
+                      onToggle={() => setFormData({...formData, showHotelModule: !formData.showHotelModule})}
+                    />
+                    <ToggleRow 
+                      icon={Utensils} 
+                      title="Módulo de Restaurante" 
+                      desc="Habilita sistema de pedidos, menú e inventario." 
+                      active={formData.showRestaurantModule}
+                      onToggle={() => setFormData({...formData, showRestaurantModule: !formData.showRestaurantModule})}
+                    />
+                  </div>
                 </div>
-                <p className="text-[11px] text-rose-300/80 font-medium leading-relaxed italic">
-                  Si deseas borrar todos los datos de tu {businessMode === "GASTRONOMY" ? "restaurante" : "hotel"} e iniciar desde cero la configuración, puedes reiniciar el negocio por completo. Esta acción eliminará permanentemente menús, habitaciones, finanzas y reservaciones.
-                </p>
-                <button 
-                  onClick={() => setIsResetModalOpen(true)}
-                  className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-rose-600/20"
-                >
-                  Reiniciar Negocio desde Cero
-                </button>
-              </div>
+
+                <div className="glass p-8 rounded-[40px] border-rose-500/20 bg-rose-500/10 space-y-6 overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-[80px] -mr-16 -mt-16" />
+                  <div className="flex items-center gap-2 text-rose-500 relative z-10">
+                    <AlertTriangle size={20} />
+                    <h4 className="text-lg font-bold font-outfit uppercase tracking-tighter italic">Zona de Peligro</h4>
+                  </div>
+                  <p className="text-[11px] text-rose-300/80 font-medium leading-relaxed italic relative z-10">
+                    Si deseas borrar todos los datos de tu {businessMode === "GASTRONOMY" ? "restaurante" : "hotel"} e iniciar desde cero la configuración, puedes reiniciar el negocio por completo. Esta acción eliminará permanentemente menús, habitaciones, finanzas y reservaciones.
+                  </p>
+                  <button 
+                    onClick={() => setIsResetModalOpen(true)}
+                    className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-rose-600/20 relative z-10"
+                  >
+                    Reiniciar Negocio desde Cero
+                  </button>
+                </div>
+              </>
             )}
           </div>
 

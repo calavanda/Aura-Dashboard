@@ -320,7 +320,7 @@ export const es = {
   "rest.tab.inventory": "INVENTARIO",
   "rest.menu.add": "AGREGAR PLATILLO",
   "rest.menu.category": "Categoría",
-  "rest.menu.price": "Precio",
+  "rest.menu.price": "Precio al Público",
   "rest.menu.desc": "Descripción",
   "rest.restaurant.new": "NUEVO ESTABLECIMIENTO",
   "rest.restaurant.name": "Nombre (Ej: Aura Bar)",

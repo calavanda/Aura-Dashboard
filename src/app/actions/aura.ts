@@ -6,14 +6,24 @@ import { HotelConfig } from "@/context/AuraContext";
 import { revalidatePath } from "next/cache";
 import { verifyAuth } from "@/lib/auth";
 
+/**
+ * Crea un nuevo establecimiento (Hotel/Restaurante) e inicializa su configuración.
+ * Configura la visibilidad inicial de los módulos basándose en el modo de negocio.
+ * @param config Configuración inicial del hotel.
+ * @param clerkId ID del usuario en Clerk para vinculación.
+ */
 export async function createHotelWithRooms(config: HotelConfig, clerkId: string) {
   try {
-    const hotel = await prisma.hotel.create({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- El modulo 'hotel' puede no estar sincronizado en el cliente local
+    const hotel = await (prisma as any).hotel.create({
       data: {
         name: config.name,
         type: config.type,
         businessMode: config.businessMode,
-        // We'll add services and logoUrl later in the Config Panel phase
+        // Si el modo es HOSPITALITY, mostramos el módulo de Hotel por defecto
+        showHotelModule: config.businessMode === "HOSPITALITY",
+        // El módulo de restaurante siempre es opcional pero visible por defecto para ADMIN
+        showRestaurantModule: true,
       }
     });
 
@@ -45,6 +55,10 @@ export async function createHotelWithRooms(config: HotelConfig, clerkId: string)
   }
 }
 
+/**
+ * Actualiza la información básica del establecimiento.
+ * Requiere permisos de ADMINISTRADOR.
+ */
 export async function updateHotelAction(hotelId: string, data: { name?: string, type?: string, logoUrl?: string, businessMode?: BusinessMode }) {
   try {
     await verifyAuth(hotelId, ["ADMIN"]);
@@ -62,6 +76,29 @@ export async function updateHotelAction(hotelId: string, data: { name?: string, 
   } catch (error) {
     console.error("Error updating hotel:", error);
     return { success: false, error: "Failed to update hotel" };
+  }
+}
+
+/**
+ * Cambia la visibilidad de los módulos de Hotel/Hospedaje y Restaurante/Gastronomía.
+ * Permite personalizar la interfaz para negocios que solo operan en un modo.
+ */
+export async function updateModuleVisibility(hotelId: string, hotelModule: boolean, restaurantModule: boolean) {
+  try {
+    await verifyAuth(hotelId, ["ADMIN"]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Necesario para actualizaciones de metadatos de hotel
+    await (prisma as any).hotel.update({
+      where: { id: hotelId },
+      data: {
+        showHotelModule: hotelModule,
+        showRestaurantModule: restaurantModule
+      }
+    });
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating visibility:", error);
+    return { success: false, error: "Failed to update module visibility" };
   }
 }
 
@@ -114,7 +151,7 @@ export async function deleteRoomAction(roomId: string) {
 
 export async function getHotelData(clerkId: string) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Requerido para consultas anidadas complejas del dashboard
     const user = await (prisma as any).user.findUnique({
       where: { clerkId },
       include: {
@@ -175,7 +212,7 @@ export async function getHotelData(clerkId: string) {
           }
         }
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Cast a Record para procesamiento dinámico de logs
     }) as Record<string, any>;
 
     if (!user || !user.hotel) return { success: false, error: "No hotel found" };
@@ -348,7 +385,7 @@ export async function addReservationAction(hotelId: string, data: {
   try {
     await verifyAuth(hotelId); 
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- El modelo 'reservation' requiere cast dinámico
     const reservation = await (prisma as any).reservation.create({
       data: {
         guestName: data.guestName,
@@ -377,11 +414,12 @@ export async function updateReservationPaymentAction(reservationId: string, data
   amount?: number
 }) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Búsqueda dinámica de reservación para validación de permisos
     const res = await (prisma as any).reservation.findUnique({ where: { id: reservationId } });
     if (!res) return { success: false };
     await verifyAuth(res.hotelId, ["ADMIN", "GERENTE", "CAJERO"]);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Requerido para actualizar pagos de estancias
     const reservation = await (prisma as any).reservation.update({
       where: { id: reservationId },
       data: {
@@ -473,9 +511,11 @@ export async function addTeamMember(hotelId: string, email: string, role: string
       return { success: false, error: "El correo pertenece a un usuario en otro establecimiento" };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Creación de miembro de equipo con acceso dinámico al modelo
     const newUser = await (prisma as any).user.create({
       data: {
         email,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- El rol se valida dinámicamente
         role: role as any,
         hotelId,
         clerkId: null
@@ -538,6 +578,7 @@ export async function resetBusinessAction(hotelId: string, confirmationName: str
       select: { id: true }
     })).map(r => r.id);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Cast requerido para transacciones masivas ante falta de tipos generados en el cliente local
     const p = prisma as any;
 
     // Atomic transaction to delete EVERYTHING related to the hotel

@@ -39,6 +39,10 @@ enum SubscriptionTier {
   ENTERPRISE
 }
 
+/**
+ * Model Hotel: Entidad principal que representa un establecimiento.
+ * Actúa como raíz para el multi-tenancy y contiene la configuración modular.
+ */
 model Hotel {
   id             String           @id @default(auto()) @map("_id") @db.ObjectId
   name           String
@@ -56,6 +60,8 @@ model Hotel {
   inventory      InventoryItem[]
   expenses       Expense[]
   devices        Device[]
+  showHotelModule  Boolean          @default(true)
+  showRestaurantModule Boolean        @default(true)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 }
@@ -123,6 +129,10 @@ model Reservation {
   updatedAt       DateTime        @updatedAt
 }
 
+/**
+ * Model Restaurant: Entidad para la gestión gastronómica.
+ * Puede existir de forma independiente o vinculado a un Hotel.
+ */
 model Restaurant {
   id         String          @id @default(auto()) @map("_id") @db.ObjectId
   name       String
@@ -193,6 +203,10 @@ model OrderItem {
   price      Float // Price at the time of order
 }
 
+/**
+ * Model InventoryItem: Control de existencias e insumos.
+ * Soporta alertas de stock bajo y valoración financiera.
+ */
 model InventoryItem {
   id           String                 @id @default(auto()) @map("_id") @db.ObjectId
   name         String
@@ -217,6 +231,9 @@ model AuditLog {
   timestamp DateTime @default(now())
 }
 
+/**
+ * Model Expense: Registro de egresos operativos (Luz, Agua, Renta, etc.)
+ */
 model Expense {
   id           String      @id @default(auto()) @map("_id") @db.ObjectId
   description  String

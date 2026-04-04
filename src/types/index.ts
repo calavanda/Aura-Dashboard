@@ -15,6 +15,8 @@ export interface Hotel {
   subscription: SubscriptionTier;
   connectionCode?: string | null;
   trialStartedAt: Date;
+  showHotelModule?: boolean;
+  showRestaurantModule?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -138,6 +140,31 @@ export interface AdvancedStats {
   roomRevenue: string;
   growth: string;
 }
+
+/**
+ * Representa un gasto operativo registrado en el sistema.
+ * Vinculado a un hotel y opcionalmente a un restaurante específico.
+ */
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  hotelId: string;
+  restaurantId?: string | null;
+  date: Date;
+}
+
+/**
+ * Resumen financiero global calculado para el Dashboard.
+ */
+export interface FinancialSummary {
+  revenue: number;
+  totalExpenses: number;
+  inventoryValue: number;
+  netProfit: number;
+}
+
 export interface ActionResponse<T = unknown> {
   success: boolean;
   data?: T;

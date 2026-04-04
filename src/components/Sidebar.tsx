@@ -9,7 +9,6 @@ import {
   Users, 
   CreditCard, 
   LogOut,
-  ChevronRight,
   TestTube2,
   Settings,
   ListTodo,
@@ -24,7 +23,7 @@ import { twMerge } from "tailwind-merge";
 import { useClerk } from "@clerk/nextjs";
 import { useI18n } from "@/context/I18nContext";
 import { useAura } from "@/context/AuraContext";
-import { BusinessMode, Role } from "@/types";
+import { Role } from "@/types";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -38,30 +37,47 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { id: "Dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "GERENTE", "CAJERO", "RESERVADOR"], modes: ["HOSPITALITY", "GASTRONOMY"] },
-  { id: "Reservaciones", icon: Calendar, label: "Reservaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"], modes: ["HOSPITALITY"] },
-  { id: "Mis Propiedades", icon: Building2, label: "Mis Propiedades", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY"] },
-  { id: "Habitaciones", icon: Bed, label: "Habitaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"], modes: ["HOSPITALITY"] },
-  { id: "Huéspedes", icon: Users, label: "Huéspedes", roles: ["ADMIN", "GERENTE", "CAJERO"], modes: ["HOSPITALITY", "GASTRONOMY"] },
-  { id: "Finanzas", icon: CreditCard, label: "Finanzas", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY", "GASTRONOMY"] },
-  { id: "Restaurante & Bar", icon: Utensils, label: "Restaurante & Bar", roles: ["ADMIN", "GERENTE", "CAJERO", "MESERO", "COCINERO"], modes: ["HOSPITALITY", "GASTRONOMY"] },
-  { id: "Logs", icon: ListTodo, label: "Logs", roles: ["ADMIN"], modes: ["HOSPITALITY", "GASTRONOMY"] },
+  { id: "Dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "GERENTE", "CAJERO", "RESERVADOR"], modes: ["HOSPITALITY", "GASTRONOMY"], tags: ["COMMON"] },
+  { id: "Reservaciones", icon: Calendar, label: "Reservaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"], modes: ["HOSPITALITY"], tags: ["HOTEL"] },
+  { id: "Mis Propiedades", icon: Building2, label: "Mis Propiedades", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY"], tags: ["HOTEL"] },
+  { id: "Habitaciones", icon: Bed, label: "Habitaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"], modes: ["HOSPITALITY"], tags: ["HOTEL"] },
+  { id: "Huéspedes", icon: Users, label: "Huéspedes", roles: ["ADMIN", "GERENTE", "CAJERO"], modes: ["HOSPITALITY", "GASTRONOMY"], tags: ["COMMON"] },
+  { id: "Finanzas", icon: CreditCard, label: "Finanzas", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY", "GASTRONOMY"], tags: ["COMMON"] },
+  { id: "Restaurante & Bar", icon: Utensils, label: "Restaurante & Bar", roles: ["ADMIN", "GERENTE", "CAJERO", "MESERO", "COCINERO"], modes: ["HOSPITALITY", "GASTRONOMY"], tags: ["RESTAURANT"] },
+  { id: "Logs", icon: ListTodo, label: "Logs", roles: ["ADMIN"], modes: ["HOSPITALITY", "GASTRONOMY"], tags: ["COMMON"] },
 ];
 
+/**
+ * Componente de Navegación Lateral (Sidebar).
+ * Filtra dinámicamente los elementos del menú basándose en:
+ * 1. El rol del usuario (ADMIN, GERENTE, etc.)
+ * 2. El modo de negocio activo (Hospitalidad o Gastronomía)
+ * 3. La configuración de visibilidad de módulos del establecimiento.
+ */
 export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarProps) {
   const [mounted, setMounted] = React.useState(false);
   const { signOut } = useClerk();
   const { language, setLanguage, t } = useI18n();
-  const { businessMode } = useAura();
+  const { businessMode, hotelConfig } = useAura();
   React.useEffect(() => setMounted(true), []);
 
-  const filteredItems = menuItems.filter(item => 
-    (!role || item.roles.includes(role)) && 
-    (item.modes.includes(businessMode))
-  );
+  const filteredItems = menuItems.filter(item => {
+    // Basic Role & Mode filter
+    const roleMatch = !role || item.roles.includes(role);
+    const modeMatch = item.modes.includes(businessMode);
+    
+    // Visibility Flag filter (ADMIN still sees everything if they want, but let's follow the setting)
+    let visibilityMatch = true;
+    if (hotelConfig) {
+      if (item.tags?.includes("HOTEL") && !hotelConfig.showHotelModule) visibilityMatch = false;
+      if (item.tags?.includes("RESTAURANT") && !hotelConfig.showRestaurantModule) visibilityMatch = false;
+    }
+
+    return roleMatch && modeMatch && visibilityMatch;
+  });
 
   if (isCreator) {
-    filteredItems.push({ id: "Sandbox", icon: TestTube2, label: "Sandbox", roles: ["ADMIN"], modes: ["HOSPITALITY", "GASTRONOMY"] });
+    filteredItems.push({ id: "Sandbox", icon: TestTube2, label: "Sandbox", roles: ["ADMIN"], modes: ["HOSPITALITY", "GASTRONOMY"], tags: ["COMMON"] });
   }
 
   if (!mounted) return <aside className="w-60 border-r border-white/5 bg-black" />;
@@ -195,7 +211,10 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
   );
 }
 
-function SidebarItem({ icon: Icon, label, active, onClick }: { icon: any; label: string; active?: boolean; onClick?: () => void }) {
+/**
+ * Elemento individual del menú lateral.
+ */
+function SidebarItem({ icon: Icon, label, active, onClick }: { icon: React.ElementType; label: string; active?: boolean; onClick?: () => void }) {
   return (
     <div 
       onClick={onClick}

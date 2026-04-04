@@ -320,7 +320,7 @@ export const en = {
   "rest.tab.inventory": "INVENTORY",
   "rest.menu.add": "ADD DISH",
   "rest.menu.category": "Category",
-  "rest.menu.price": "Price",
+  "rest.menu.price": "Public Price",
   "rest.menu.desc": "Description",
   "rest.restaurant.new": "NEW ESTABLISHMENT",
   "rest.restaurant.name": "Name (e.g. Aura Bar)",

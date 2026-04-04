@@ -18,6 +18,7 @@ export function AddInventoryItemModal({ isOpen, onClose, hotelId, restaurantId, 
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("kg");
   const [threshold, setThreshold] = useState("2");
+  const [cost, setCost] = useState("0");
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -34,7 +35,7 @@ export function AddInventoryItemModal({ isOpen, onClose, hotelId, restaurantId, 
         quantity: parseFloat(quantity),
         unit,
         threshold: parseFloat(threshold),
-        price: 0 // Defaulting to 0 for now as it's optional
+        price: parseFloat(cost)
       });
 
       if (res.success) {
@@ -44,6 +45,7 @@ export function AddInventoryItemModal({ isOpen, onClose, hotelId, restaurantId, 
           setQuantity("");
           setUnit("kg");
           setThreshold("2");
+          setCost("0");
           setIsSubmitting(false);
           setIsSuccess(false);
           onSuccess();
@@ -162,22 +164,39 @@ export function AddInventoryItemModal({ isOpen, onClose, hotelId, restaurantId, 
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-600 pl-2">Umbral de Aviso (Stock Bajo)</label>
-                  <div className="relative">
-                    <AlertTriangle className="absolute left-4 top-1/2 -translate-y-1/2 text-[#FF385C]/60" size={14} />
-                    <input 
-                      type="number" 
-                      step="0.01"
-                      value={threshold}
-                      onChange={(e) => setThreshold(e.target.value)}
-                      placeholder="Ej. 2"
-                      className="w-full bg-[#FF385C]/5 border border-[#FF385C]/10 rounded-xl py-3 pl-12 pr-4 text-white font-bold focus:border-[#FF385C] outline-none transition-all text-sm"
-                      required
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-zinc-600 pl-2">Umbral de Aviso</label>
+                      <div className="relative">
+                        <AlertTriangle className="absolute left-4 top-1/2 -translate-y-1/2 text-[#FF385C]/60" size={14} />
+                        <input 
+                          type="number" 
+                          step="0.01"
+                          value={threshold}
+                          onChange={(e) => setThreshold(e.target.value)}
+                          placeholder="Ej. 2"
+                          className="w-full bg-[#FF385C]/5 border border-[#FF385C]/10 rounded-xl py-3 pl-12 pr-4 text-white font-bold focus:border-[#FF385C] outline-none transition-all text-sm"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-zinc-600 pl-2">Costo de Compra (U$)</label>
+                      <div className="relative">
+                        <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={14} />
+                        <input 
+                          type="number" 
+                          step="0.01"
+                          value={cost}
+                          onChange={(e) => setCost(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full bg-white/5 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white font-bold focus:border-[#FF385C] outline-none transition-all placeholder:text-zinc-800 text-sm"
+                          required
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-[8px] text-zinc-600 italic">Te avisaremos cuando quede menos de esta cantidad.</p>
-                </div>
 
                 <div className="pt-4">
                   <button 
