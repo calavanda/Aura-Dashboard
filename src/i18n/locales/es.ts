@@ -52,7 +52,7 @@ export const es = {
   "nav.properties": "Mis Propiedades",
   "nav.inventory": "Habitaciones",
   "nav.finances": "Finanzas",
-  "nav.guests": "Huéspedes",
+  "nav.guests": "Clientes",
   "nav.clients": "Clientes",
   "nav.logs": "Logs",
   "nav.sandbox": "Sandbox",
@@ -153,7 +153,7 @@ export const es = {
   "prop.book.settled": "LIQUIDACIONES BALANCEADAS",
   "prop.book.ledger": "FILTROS DE LIBRO",
   "prop.book.reset": "RESTAURAR",
-  "prop.book.search": "Ref ID o Nombre Huésped...",
+  "prop.book.search": "Ref ID o Nombre Cliente...",
   "prop.book.export": "GENERAR EXPORTACIÓN",
   "prop.book.noMatch": "NO SE ENCONTRARON RESERVAS",
   "prop.book.display": "MOSTRANDO 0 DE 0 ENTRADAS",
@@ -225,13 +225,13 @@ export const es = {
   "set.saved": "¡Guardado exitosamente!",
   "common.saved": "GUARDADO",
   "set.purgeConfirmAll": "¿Estás seguro de que deseas purgar TODOS los datos (Reservas y Logs)? Esta acción no se puede deshacer.",
-  "set.purgeConfirmRes": "¿Confirmas que deseas eliminar todos los Huéspedes/Reservas?",
+  "set.purgeConfirmRes": "¿Confirmas que deseas eliminar todos los Clientes/Reservas?",
   "set.purgeConfirmLogs": "¿Confirmas que deseas eliminar todos los Logs de Auditoría?",
   "set.purgeSuccess": "Limpieza completada exitosamente.",
   "set.imgLimit": "La imagen no debe superar los 2MB.",
 
   // Reservation List
-  "res.title": "Index de Huéspedes",
+  "res.title": "Index de Clientes",
   "res.subtitle": "Monitoreo de Pipeline Activo",
   "res.new": "NUEVA RESERVA MANUAL",
   "res.guestName": "NOMBRE DEL CLIENTE",
@@ -274,13 +274,13 @@ export const es = {
   "pay.confirm": "REGISTRAR PAGO",
 
   // Guest Module
-  "guest.title": "Huéspedes",
+  "guest.title": "Clientes",
   "guest.subtitle": "Base de datos de clientes y fidelización.",
-  "guest.search": "Buscar huésped...",
+  "guest.search": "Buscar cliente...",
   "guest.lastVisit": "Última visita",
   "guest.stays": "Estancias",
   "guest.spent": "Total invertido",
-  "guest.empty": "Sin huéspedes aún",
+  "guest.empty": "Sin clientes aún",
   "guest.emptyDesc": "Cuando los clientes comiencen a reservar desde Aura Web o el Dashboard, aparecerán aquí.",
 
   // Audit Logs

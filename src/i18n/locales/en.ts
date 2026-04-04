@@ -52,7 +52,7 @@ export const en = {
   "nav.properties": "My Properties",
   "nav.inventory": "Rooms",
   "nav.finances": "Finances",
-  "nav.guests": "Guests",
+  "nav.guests": "Clients",
   "nav.clients": "Clients",
   "nav.logs": "Audit Logs",
   "nav.sandbox": "Sandbox",
@@ -153,7 +153,7 @@ export const en = {
   "prop.book.settled": "SETTLEMENTS BALANCED",
   "prop.book.ledger": "LEDGER FILTERS",
   "prop.book.reset": "RESET ALL",
-  "prop.book.search": "Ref ID or Guest Name...",
+  "prop.book.search": "Ref ID or Client Name...",
   "prop.book.export": "GENERATE EXPORT",
   "prop.book.noMatch": "NO MATCHING BOOKINGS FOUND",
   "prop.book.display": "DISPLAYING 0 TO 0 OF 0 ENTRIES",
@@ -225,13 +225,13 @@ export const en = {
   "set.saved": "Saved successfully!",
   "common.saved": "SAVED",
   "set.purgeConfirmAll": "Are you sure you want to purge ALL data (Reservations and Logs)? This action cannot be undone.",
-  "set.purgeConfirmRes": "Confirm you want to delete all Guests/Reservations?",
+  "set.purgeConfirmRes": "Confirm you want to delete all Clients/Reservations?",
   "set.purgeConfirmLogs": "Confirm you want to delete all Audit Logs?",
   "set.purgeSuccess": "Cleanup completed successfully.",
   "set.imgLimit": "Image must not exceed 2MB.",
 
   // Reservation List
-  "res.title": "Guest Index",
+  "res.title": "Client Index",
   "res.subtitle": "Active Pipeline Monitoring",
   "res.new": "NEW MANUAL RESERVATION",
   "res.guestName": "GUEST NAME",
@@ -274,13 +274,13 @@ export const en = {
   "pay.confirm": "REGISTER PAYMENT",
 
   // Guest Module
-  "guest.title": "Guests",
+  "guest.title": "Clients",
   "guest.subtitle": "Customer database and loyalty program.",
-  "guest.search": "Search guest...",
+  "guest.search": "Search client...",
   "guest.lastVisit": "Last visit",
   "guest.stays": "Stays",
   "guest.spent": "Total spent",
-  "guest.empty": "No guests yet",
+  "guest.empty": "No clients yet",
   "guest.emptyDesc": "When customers start booking from Aura Web or the Dashboard, they will appear here.",
 
   // Audit Logs
