@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { RoomStatus, PaymentMethod, PaymentStatus, PaymentProvider, AuditLog } from "@/types";
+import { RoomStatus, PaymentMethod, PaymentStatus, PaymentProvider, AuditLog, BusinessMode } from "@/types";
 import { HotelConfig } from "@/context/AuraContext";
 import { revalidatePath } from "next/cache";
 
@@ -44,7 +44,7 @@ export async function createHotelWithRooms(config: HotelConfig, clerkId: string)
   }
 }
 
-export async function updateHotelAction(hotelId: string, data: { name?: string, type?: string, logoUrl?: string }) {
+export async function updateHotelAction(hotelId: string, data: { name?: string, type?: string, logoUrl?: string, businessMode?: BusinessMode }) {
   try {
     const hotel = await prisma.hotel.update({
       where: { id: hotelId },
@@ -52,8 +52,7 @@ export async function updateHotelAction(hotelId: string, data: { name?: string, 
         ...(data.name && { name: data.name }),
         ...(data.type && { type: data.type }),
         ...(data.logoUrl && { logoUrl: data.logoUrl }),
-        // businessMode is usually set at creation and not changed often, 
-        // but it's good to have it here if needed
+        ...(data.businessMode && { businessMode: data.businessMode }),
       }
     });
     revalidatePath("/");
@@ -141,6 +140,14 @@ export async function getHotelData(clerkId: string) {
                       }
                     }
                   }
+                }
+              }
+            },
+            orders: {
+              where: { status: { in: ["PENDIENTE", "PREPARANDO"] } },
+              include: {
+                items: {
+                  include: { menuItem: true }
                 }
               }
             }

@@ -17,6 +17,7 @@ import {
   MenuItemSchema
 } from "@/lib/validation";
 import { z } from "zod";
+import { auth } from "@clerk/nextjs/server";
 
 /**
  * Standardized Error Creator
@@ -45,7 +46,7 @@ export async function getRestaurantData(hotelId: string): Promise<ActionResponse
     const activeOrders = await prisma.order.findMany({
       where: { 
         hotelId,
-        status: { in: ["PENDIENTE", "PREPARANDO"] }
+        status: { in: ["PENDIENTE", "PREPARANDO", "SERVIDO"] }
       },
       include: {
         items: {
@@ -172,9 +173,11 @@ export async function processOrder(hotelId: string, rawData: unknown): Promise<A
   }
 }
 
-// Placeholder for user context
+// Helper to get current user ID
 async function getUserId() {
-  const user = await prisma.user.findFirst();
+  const { userId: clerkId } = await auth();
+  if (!clerkId) return null;
+  const user = await prisma.user.findUnique({ where: { clerkId } });
   return user?.id;
 }
 

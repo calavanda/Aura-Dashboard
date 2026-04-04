@@ -26,6 +26,7 @@ import {
   Hotel,
   InventoryItem,
   Restaurant,
+  Order,
   BusinessMode
 } from "@/types";
 
@@ -44,6 +45,7 @@ interface AuraContextType {
   reservations: Reservation[];
   inventoryItems: InventoryItem[];
   restaurants: Restaurant[];
+  activeOrders: Order[];
   hotelConfig: HotelConfig | null;
   hotelId: string | null;
   businessMode: BusinessMode;
@@ -55,7 +57,7 @@ interface AuraContextType {
   isOwner: boolean;
   logs: AuditLog[];
   refreshData: () => Promise<void>;
-  updateHotel: (data: { name?: string, type?: string, logoUrl?: string }) => Promise<{ success: boolean, error?: string }>;
+  updateHotel: (data: { name?: string, type?: string, logoUrl?: string, businessMode?: BusinessMode }) => Promise<{ success: boolean, error?: string }>;
   addRoom: (room: { number: string, type: string, status?: RoomStatus }) => Promise<{ success: boolean, error?: string }>;
   applyMasterKey: (key: string) => Promise<{ success: boolean, error?: string }>;
   updateRoom: (id: string, room: Partial<Room>) => void;
@@ -76,6 +78,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [hotelConfig, setHotelConfig] = useState<HotelConfig | null>(null);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [hotelId, setHotelId] = useState<string | null>(null);
@@ -111,6 +114,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
           setReservations(result.reservations as Reservation[] || []);
           setInventoryItems(result.inventory as InventoryItem[] || []);
           setRestaurants(result.restaurants as Restaurant[] || []);
+          setActiveOrders(result.hotel.orders as Order[] || []);
           setLogs(result.logs as AuditLog[] || []);
           const isOwnerUser = result.isOwner || false;
           setIsOwner(isOwnerUser);
@@ -141,7 +145,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
     return { success: false, error: result.error };
   };
 
-  const updateHotel = async (data: { name?: string, type?: string, logoUrl?: string }) => {
+  const updateHotel = async (data: { name?: string, type?: string, logoUrl?: string, businessMode?: BusinessMode }) => {
     if (!hotelId) return { success: false, error: "No hotel ID" };
     const res = await updateHotelAction(hotelId, data);
     if (res.success && res.hotel) {
@@ -271,6 +275,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
         setReservations(result.reservations as Reservation[] || []);
         setInventoryItems(result.inventory as InventoryItem[] || []);
         setRestaurants(result.restaurants as Restaurant[] || []);
+        setActiveOrders(result.hotel.orders as Order[] || []);
         setLogs(result.logs as AuditLog[] || []);
         
         const isOwnerUser = result.isOwner || false;
@@ -294,6 +299,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
       reservations, 
       inventoryItems,
       restaurants,
+      activeOrders,
       hotelConfig, 
       hotelId,
       businessMode,

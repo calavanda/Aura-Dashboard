@@ -74,7 +74,7 @@ function StatCard({ title, value, change, icon: Icon, trend }: { title: string, 
 }
 
 function GastroDashboardHome() {
-  const { restaurants, inventoryItems } = useAura();
+  const { restaurants, inventoryItems, activeOrders } = useAura();
   const { t } = useI18n();
   
   // Example stats for GASTRONOMY
@@ -106,7 +106,7 @@ function GastroDashboardHome() {
       {/* Stats Grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
         <StatCard title="Ventas del Día" value="$0" change="0%" trend="neutral" icon={CreditCard} />
-        <StatCard title="Pedidos Activos" value="0" change="0" trend="neutral" icon={Clock} />
+        <StatCard title="Pedidos Activos" value={`${activeOrders.length}`} change="0" trend="neutral" icon={Clock} />
         <StatCard title="Stock Bajo" value={`${lowStockCount}`} change={lowStockCount > 0 ? "Revisar" : "Ok"} trend={lowStockCount > 0 ? "down" : "neutral"} icon={AlertTriangle} />
         <StatCard title="Platillos en Menú" value={`${totalItems}`} change="Estable" trend="neutral" icon={Utensils} />
       </section>

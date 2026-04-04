@@ -22,10 +22,11 @@ import { Restaurant, Order, InventoryItem, MenuCategory, MenuItem } from "@/type
 import { useCallback } from "react";
 import { AddOrderModal } from "./Restaurant/AddOrderModal";
 import { AddMenuItemModal } from "./Restaurant/AddMenuItemModal";
+import { CreateRestaurantModal } from "./Restaurant/CreateRestaurantModal";
 
 export function RestaurantModule() {
   const { t } = useI18n();
-  const { hotelId } = useAura();
+  const { hotelId, refreshData } = useAura();
   const [activeTab, setActiveTab] = useState("ORDERS"); // ORDERS, MENU, INVENTORY
   const [restaurantData, setRestaurantData] = useState<{
     restaurants: Restaurant[];
@@ -35,6 +36,7 @@ export function RestaurantModule() {
   const [loading, setLoading] = useState(true);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
+  const [isCreateRestaurantModalOpen, setIsCreateRestaurantModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!hotelId) return;
@@ -48,7 +50,8 @@ export function RestaurantModule() {
       });
     }
     setLoading(false);
-  }, [hotelId]);
+    refreshData(); // Sync global dashboard stats
+  }, [hotelId, refreshData]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -286,7 +289,32 @@ export function RestaurantModule() {
         </AnimatePresence>
       )}
 
+      {/* Empty State when no restaurants exist */}
+      {!loading && (!restaurantData?.restaurants || restaurantData.restaurants.length === 0) && (
+        <div className="flex flex-col items-center justify-center p-20 glass rounded-4xl border-white/5 bg-white/1 text-center">
+          <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-8 border border-white/10 group">
+            <Utensils size={40} className="text-[#FF385C] group-hover:scale-110 transition-transform" />
+          </div>
+          <h4 className="text-2xl font-black text-white uppercase tracking-tighter mb-4 italic">
+            {t("rest.restaurant.empty")}
+          </h4>
+          <button 
+            onClick={() => setIsCreateRestaurantModalOpen(true)}
+            className="bg-[#FF385C] hover:bg-[#FF385C]/90 text-white text-[10px] font-black uppercase tracking-[0.3em] px-10 py-5 rounded-full shadow-[0_0_30px_rgba(255,56,92,0.4)] transition-all transform hover:scale-105 active:scale-95"
+          >
+            <Plus size={16} className="inline mr-2 mb-0.5" /> {t("rest.restaurant.create")}
+          </button>
+        </div>
+      )}
+
       {/* Modals */}
+      <CreateRestaurantModal 
+        isOpen={isCreateRestaurantModalOpen}
+        onClose={() => setIsCreateRestaurantModalOpen(false)}
+        hotelId={hotelId || ""}
+        onSuccess={loadData}
+      />
+
       {restaurantData?.restaurants && restaurantData.restaurants.length > 0 && (
         <>
           <AddOrderModal 

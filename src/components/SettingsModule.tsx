@@ -26,6 +26,7 @@ export function SettingsModule() {
     name: hotelConfig?.name || "",
     type: hotelConfig?.type || "Hotel",
     logoUrl: hotelConfig?.logoUrl || "",
+    businessMode: businessMode,
     notifications: typeof window !== "undefined" ? localStorage.getItem("aura_prefs_notif") !== "false" : true,
     publicWeb: typeof window !== "undefined" ? localStorage.getItem("aura_prefs_sync") !== "false" : true
   });
@@ -34,7 +35,12 @@ export function SettingsModule() {
   
   const handleSave = async () => {
     setSaveStatus("saving");
-    const res = await updateHotel({ name: formData.name, type: formData.type, logoUrl: formData.logoUrl });
+    const res = await updateHotel({ 
+      name: formData.name, 
+      type: formData.type, 
+      logoUrl: formData.logoUrl,
+      businessMode: formData.businessMode
+    });
     if (res.success) {
       if (typeof window !== "undefined") {
         localStorage.setItem("aura_prefs_notif", formData.notifications.toString());
@@ -134,6 +140,37 @@ export function SettingsModule() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div className="space-y-3 pt-4 border-t border-white/5">
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">Modo de Operación</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setFormData({...formData, businessMode: "HOSPITALITY", type: "Hotel"})}
+                      className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${
+                        formData.businessMode === "HOSPITALITY" 
+                          ? 'bg-primary/10 border-primary text-primary' 
+                          : 'bg-accent/30 border-border text-muted hover:border-muted group'
+                      }`}
+                    >
+                      <Building2 size={20} className={formData.businessMode === "HOSPITALITY" ? 'text-primary' : 'text-muted group-hover:text-foreground'} />
+                      <span className="text-[10px] font-bold uppercase">{t("setup.hospitality")}</span>
+                    </button>
+                    <button
+                      onClick={() => setFormData({...formData, businessMode: "GASTRONOMY", type: "Restaurante"})}
+                      className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${
+                        formData.businessMode === "GASTRONOMY" 
+                          ? 'bg-[#FF385C]/10 border-[#FF385C] text-[#FF385C]' 
+                          : 'bg-accent/30 border-border text-muted hover:border-muted group'
+                      }`}
+                    >
+                      <Utensils size={20} className={formData.businessMode === "GASTRONOMY" ? 'text-[#FF385C]' : 'text-muted group-hover:text-foreground'} />
+                      <span className="text-[10px] font-bold uppercase">{t("setup.gastronomy")}</span>
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-zinc-500 italic mt-2">
+                    * El cambio de modo ocultará o mostrará secciones específicas de la interfaz (ej. Habitaciones vs Menús).
+                  </p>
                 </div>
               </div>
             </div>
