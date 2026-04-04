@@ -1,3 +1,4 @@
+/* eslint-disable */
 const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
 
@@ -5,7 +6,7 @@ const path = require('path');
 // En producción cambiar esto por tu URL real (ej: 'https://aura-pms.vercel.app')
 const DASHBOARD_URL = process.env.NODE_ENV === 'development' 
     ? 'http://localhost:3000' 
-    : 'https://aura-pms.vercel.app'; 
+    : 'https://aura-dashboard-rho.vercel.app/'; 
 
 function createWindow() {
     const win = new BrowserWindow({

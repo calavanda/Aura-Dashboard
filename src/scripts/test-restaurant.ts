@@ -48,7 +48,7 @@ export async function testDeduction() {
 
   // 2. Test Success Ordering
   console.log("Testing order success...");
-  const resp1 = await processOrder(hotel.id, {
+  const resp1 = await processOrder(hotel.id, category.restaurantId, {
     items: [{ menuItemId: menuItem.id, quantity: 2, price: 200 }],
     total: 400,
     paymentMethod: "EFECTIVO"
@@ -63,7 +63,7 @@ export async function testDeduction() {
 
   // 3. Test Failure (Insufficient Stock)
   console.log("Testing order failure (insufficient stock)...");
-  const resp2 = await processOrder(hotel.id, {
+  const resp2 = await processOrder(hotel.id, category.restaurantId, {
     items: [{ menuItemId: menuItem.id, quantity: 20, price: 200 }], // Needs 10kg, only has 9kg
     total: 4000,
     paymentMethod: "EFECTIVO"

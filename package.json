@@ -41,5 +41,26 @@
     "prisma": "^6.19.2",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "build": {
+    "appId": "com.aura.dashboard",
+    "productName": "Aura Dashboard",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "electron/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Aura Dashboard"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ]
   }
 }
