@@ -19,6 +19,10 @@ export const MenuItemSchema = z.object({
   description: z.string().optional(),
   price: z.number().nonnegative("Price cannot be negative"),
   categoryId: z.string().min(1, "Category ID is required"),
+  recipe: z.array(z.object({
+    inventoryItemId: z.string(),
+    quantityNeeded: z.number().positive()
+  })).optional()
 });
 
 export const InventoryItemSchema = z.object({

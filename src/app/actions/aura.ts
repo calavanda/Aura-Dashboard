@@ -381,18 +381,96 @@ export async function validateMasterKeyAction(hotelId: string, key: string) {
 
 export async function checkOrCreateUserAction(clerkId: string, email: string) {
   try {
-    const user = await prisma.user.upsert({
-      where: { clerkId },
-      update: {},
-      create: {
+    // 1. Check if user already exists by Clerk ID
+    let user = await prisma.user.findUnique({
+      where: { clerkId }
+    });
+
+    if (user) {
+      return { success: true, user };
+    }
+
+    // 2. Check if user was pre-invited by email
+    user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (user) {
+      // Link Clerk ID to the pre-invited record
+      const updatedUser = await prisma.user.update({
+        where: { email },
+        data: { clerkId }
+      });
+      return { success: true, user: updatedUser };
+    }
+
+    // 3. Simple creation (new user)
+    const newUser = await prisma.user.create({
+      data: {
         clerkId,
         email,
         role: "RESERVADOR", // Default role
       }
     });
-    return { success: true, user };
+
+    return { success: true, user: newUser };
   } catch (error) {
     console.error("Error checking/creating user:", error);
     return { success: false };
+  }
+}
+
+export async function addTeamMember(hotelId: string, email: string, role: string) {
+  try {
+    // Check if user already exists
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      if (existing.hotelId === hotelId) {
+        return { success: false, error: "El usuario ya es parte del equipo" };
+      }
+      // If user exists elsewhere, we can't easily "steal" them without a multi-hotel model
+      // but for now, we'll allow updating their hotelId if they are not active elsewhere
+      // or just error out.
+      return { success: false, error: "El correo pertenece a un usuario en otro establecimiento" };
+    }
+
+    const newUser = await (prisma.user as any).create({
+      data: {
+        email,
+        role: role as any,
+        hotelId,
+        clerkId: null
+      }
+    });
+
+    revalidatePath("/");
+    return { success: true, user: newUser };
+  } catch {
+    return { success: false, error: "Failed to add member" };
+  }
+}
+
+export async function getBusinessTeam(hotelId: string) {
+  try {
+    const users = await prisma.user.findMany({
+      where: { hotelId },
+      orderBy: { createdAt: 'asc' }
+    });
+    return { success: true, users };
+  } catch {
+    return { success: false, error: "Failed to fetch team" };
+  }
+}
+
+export async function removeTeamMember(userId: string) {
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { hotelId: null, role: "RESERVADOR" } // Unlink rather than delete to preserve history
+    });
+    revalidatePath("/");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Failed to remove member" };
   }
 }

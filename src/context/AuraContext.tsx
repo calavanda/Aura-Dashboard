@@ -50,7 +50,7 @@ interface AuraContextType {
   hotelId: string | null;
   businessMode: BusinessMode;
   isSetupComplete: boolean;
-  role: "ADMIN" | "GERENTE" | "RESERVADOR" | Role | null;
+  role: Role | null;
   subscription: "BASIC" | "PRO" | "ENTERPRISE";
   connectionCode: string | null;
   trialDaysLeft: number;
@@ -83,7 +83,7 @@ export const AuraProvider = ({ children }: { children: ReactNode }) => {
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [hotelId, setHotelId] = useState<string | null>(null);
   const [businessMode, setBusinessMode] = useState<BusinessMode>("HOSPITALITY");
-  const [role, setRole] = useState<"ADMIN" | "GERENTE" | "RESERVADOR" | null>(null);
+  const [role, setRole] = useState<Role | null>(null);
   const [subscription, setSubscription] = useState<"BASIC" | "PRO" | "ENTERPRISE">("BASIC");
   const [connectionCode, setConnectionCode] = useState<string | null>(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number>(15);

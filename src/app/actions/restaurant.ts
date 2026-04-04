@@ -124,10 +124,21 @@ export async function processOrder(hotelId: string, rawData: unknown): Promise<A
           }
 
           // Deduct stock
-          await tx.inventoryItem.update({
+          const updatedItem = await tx.inventoryItem.update({
             where: { id: inventoryItem.id },
             data: { quantity: { decrement: totalNeeded } }
           });
+
+          // Check for low stock notification
+          if (updatedItem.quantity <= updatedItem.threshold) {
+             await tx.auditLog.create({
+               data: {
+                 userId: (await getUserId()) || "",
+                 action: "LOW_STOCK_ALERT",
+                 details: `¡ALERTA!: ${updatedItem.name} bajo en stock (${updatedItem.quantity}${updatedItem.unit}). Umbral: ${updatedItem.threshold}${updatedItem.unit}.`
+               }
+             });
+          }
         }
       }
 
@@ -241,13 +252,19 @@ export async function createMenuItem(hotelId: string, rawData: unknown): Promise
   try {
     const validated = MenuItemSchema.parse(rawData);
     
+    // We handle the recipe separately to use Prisma's specialized 'create' syntax for relations
+    const { recipe, ...rest } = validated;
+
     const menuItem = await prisma.menuItem.create({
       data: {
-        name: validated.name,
-        description: validated.description,
-        price: validated.price,
-        categoryId: validated.categoryId,
-        available: true
+        ...rest,
+        available: true,
+        recipe: recipe ? {
+          create: recipe.map(r => ({
+            inventoryItemId: r.inventoryItemId,
+            quantityNeeded: r.quantityNeeded
+          }))
+        } : undefined
       }
     });
 
@@ -265,6 +282,7 @@ export async function createMenuItem(hotelId: string, rawData: unknown): Promise
     if (err instanceof z.ZodError) {
       return createError(err.issues[0].message, "VALIDATION_ERROR");
     }
+    console.error("MenuItem Creation Error:", err);
     return createError("Failed to create dish");
   }
 }

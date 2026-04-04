@@ -1,4 +1,4 @@
-export type Role = "ADMIN" | "GERENTE" | "RESERVADOR";
+export type Role = "ADMIN" | "GERENTE" | "RESERVADOR" | "CAJERO" | "MESERO" | "COCINERO";
 export type RoomStatus = "Limpia" | "Sucia" | "Ocupada" | "Mantenimiento";
 export type SubscriptionTier = "BASIC" | "PRO" | "ENTERPRISE";
 export type BusinessMode = "HOSPITALITY" | "GASTRONOMY";
@@ -139,4 +139,12 @@ export interface ActionResponse<T = unknown> {
   data?: T;
   error?: string;
   code?: string;
+}
+export interface User {
+  id: string;
+  clerkId?: string | null;
+  email: string;
+  role: Role;
+  hotelId?: string | null;
+  createdAt: Date;
 }

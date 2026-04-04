@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Utensils, DollarSign, Type, AlignLeft, Layers, Loader2, Check } from "lucide-react";
+import { X, Plus, Utensils, DollarSign, Type, AlignLeft, Layers, Loader2, Check, Trash2 } from "lucide-react";
 import { createMenuItem, createMenuCategory } from "@/app/actions/restaurant";
-import { Restaurant } from "@/types";
+import { Restaurant, MenuCategory } from "@/types";
 import { useI18n } from "@/context/I18nContext";
+import { useAura } from "@/context/AuraContext";
 
 interface AddMenuItemModalProps {
   isOpen: boolean;
@@ -26,6 +27,23 @@ export function AddMenuItemModal({ isOpen, onClose, restaurant, onSuccess }: Add
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const { inventoryItems } = useAura();
+  const [recipe, setRecipe] = useState<{ inventoryItemId: string, quantityNeeded: number }[]>([]);
+
+  const addIngredient = () => {
+    setRecipe([...recipe, { inventoryItemId: "", quantityNeeded: 0 }]);
+  };
+
+  const removeIngredient = (index: number) => {
+    setRecipe(recipe.filter((_, i) => i !== index));
+  };
+
+  const updateIngredient = (index: number, field: "inventoryItemId" | "quantityNeeded", value: string | number) => {
+    const newRecipe = [...recipe];
+    newRecipe[index] = { ...newRecipe[index], [field]: value };
+    setRecipe(newRecipe);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || (!categoryId && !newCategoryName) || !price || isSubmitting) return;
@@ -39,7 +57,8 @@ export function AddMenuItemModal({ isOpen, onClose, restaurant, onSuccess }: Add
       if (showNewCategoryInput && newCategoryName) {
         const catRes = await createMenuCategory(restaurant.id, newCategoryName);
         if (catRes.success && catRes.data) {
-          finalCategoryId = catRes.data.id;
+          const category = catRes.data as MenuCategory;
+          finalCategoryId = category.id;
         } else {
           throw new Error("Failed to create category");
         }
@@ -49,7 +68,8 @@ export function AddMenuItemModal({ isOpen, onClose, restaurant, onSuccess }: Add
         name,
         description,
         price: parseFloat(price),
-        categoryId: finalCategoryId
+        categoryId: finalCategoryId,
+        recipe: recipe.filter(r => r.inventoryItemId && r.quantityNeeded > 0)
       });
 
       if (res.success) {
@@ -92,9 +112,9 @@ export function AddMenuItemModal({ isOpen, onClose, restaurant, onSuccess }: Add
             animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 40, rotateX: 20 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg glass border-white/10 p-1 rounded-[45px] z-70 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl glass border-white/10 p-1 rounded-[45px] z-70 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden"
           >
-            <div className="bg-[#0A0A0A]/90 p-10 rounded-[40px] relative overflow-hidden">
+            <div className="bg-[#0A0A0A]/90 p-10 rounded-[40px] relative overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar">
               <AnimatePresence>
                 {isSuccess && (
                   <motion.div 
@@ -232,6 +252,70 @@ export function AddMenuItemModal({ isOpen, onClose, restaurant, onSuccess }: Add
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Recipe Section */}
+                <div className="space-y-4 pt-4 border-t border-white/5">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600 pl-4 font-institutional">Receta / Ingredientes</label>
+                    <button 
+                      type="button"
+                      onClick={addIngredient}
+                      className="text-[8px] font-black uppercase tracking-widest text-[#FF385C] hover:bg-[#FF385C]/10 px-3 py-1 rounded-full transition-all flex items-center"
+                    >
+                      <Plus size={10} className="mr-1" /> Agregar Insumo
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {recipe.map((ing, idx) => (
+                      <motion.div 
+                        key={idx}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="grid grid-cols-12 gap-2 items-center bg-white/2 p-2 rounded-2xl border border-white/5"
+                      >
+                        <div className="col-span-7">
+                          <select 
+                            value={ing.inventoryItemId}
+                            onChange={(e) => updateIngredient(idx, "inventoryItemId", e.target.value)}
+                            className="w-full bg-transparent border-none text-[11px] font-bold text-white focus:ring-0 outline-none uppercase tracking-tighter"
+                          >
+                            <option value="" className="bg-[#0A0A0A]">Seleccionar ingrediente...</option>
+                            {inventoryItems.map(item => (
+                              <option key={item.id} value={item.id} className="bg-[#0A0A0A]">
+                                {item.name} ({item.unit})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-span-3 flex items-center bg-white/5 rounded-xl px-2">
+                          <input 
+                            type="number" 
+                            step="0.001"
+                            value={ing.quantityNeeded}
+                            onChange={(e) => updateIngredient(idx, "quantityNeeded", parseFloat(e.target.value))}
+                            placeholder="Cant."
+                            className="w-full bg-transparent border-none text-[11px] font-black text-white focus:ring-0 outline-none py-2"
+                          />
+                        </div>
+                        <div className="col-span-2 flex justify-center">
+                          <button 
+                            type="button"
+                            onClick={() => removeIngredient(idx)}
+                            className="p-2 text-zinc-600 hover:text-[#FF385C] transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                    {recipe.length === 0 && (
+                      <p className="text-[10px] text-zinc-600 italic text-center py-4 border border-dashed border-white/5 rounded-2xl">
+                        Sin ingredientes vinculados. El stock no se descontará automáticamente.
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 <div className="pt-6">
                   <button 

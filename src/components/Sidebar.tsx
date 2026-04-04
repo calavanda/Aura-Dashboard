@@ -24,7 +24,7 @@ import { twMerge } from "tailwind-merge";
 import { useClerk } from "@clerk/nextjs";
 import { useI18n } from "@/context/I18nContext";
 import { useAura } from "@/context/AuraContext";
-import { BusinessMode } from "@/types";
+import { BusinessMode, Role } from "@/types";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -33,18 +33,18 @@ function cn(...inputs: ClassValue[]) {
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  role: "ADMIN" | "GERENTE" | "RESERVADOR" | null;
+  role: Role | null;
   isCreator?: boolean;
 }
 
 const menuItems = [
-  { id: "Dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "GERENTE", "RESERVADOR"], modes: ["HOSPITALITY", "GASTRONOMY"] },
+  { id: "Dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["ADMIN", "GERENTE", "CAJERO", "RESERVADOR"], modes: ["HOSPITALITY", "GASTRONOMY"] },
   { id: "Reservaciones", icon: Calendar, label: "Reservaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"], modes: ["HOSPITALITY"] },
   { id: "Mis Propiedades", icon: Building2, label: "Mis Propiedades", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY"] },
   { id: "Habitaciones", icon: Bed, label: "Habitaciones", roles: ["ADMIN", "GERENTE", "RESERVADOR"], modes: ["HOSPITALITY"] },
-  { id: "Huéspedes", icon: Users, label: "Huéspedes", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY", "GASTRONOMY"] },
-  { id: "Finanzas", icon: CreditCard, label: "Finanzas", roles: ["ADMIN"], modes: ["HOSPITALITY", "GASTRONOMY"] },
-  { id: "Restaurante & Bar", icon: Utensils, label: "Restaurante & Bar", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY", "GASTRONOMY"] },
+  { id: "Huéspedes", icon: Users, label: "Huéspedes", roles: ["ADMIN", "GERENTE", "CAJERO"], modes: ["HOSPITALITY", "GASTRONOMY"] },
+  { id: "Finanzas", icon: CreditCard, label: "Finanzas", roles: ["ADMIN", "GERENTE"], modes: ["HOSPITALITY", "GASTRONOMY"] },
+  { id: "Restaurante & Bar", icon: Utensils, label: "Restaurante & Bar", roles: ["ADMIN", "GERENTE", "CAJERO", "MESERO", "COCINERO"], modes: ["HOSPITALITY", "GASTRONOMY"] },
   { id: "Logs", icon: ListTodo, label: "Logs", roles: ["ADMIN"], modes: ["HOSPITALITY", "GASTRONOMY"] },
 ];
 
@@ -182,6 +182,9 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
             <span className="text-[8px] font-bold text-[#FF385C] uppercase tracking-widest">
                {role === "ADMIN" && t("sidebar.role.admin")}
                {role === "GERENTE" && t("sidebar.role.manager")}
+               {role === "CAJERO" && "Cajero"}
+               {role === "MESERO" && "Mesero"}
+               {role === "COCINERO" && "Cocinero"}
                {role === "RESERVADOR" && t("sidebar.role.staff")}
                {!role && t("sidebar.role.user")}
             </span>

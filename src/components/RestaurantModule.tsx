@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { clsx } from "clsx";
 import { useI18n, Translations } from "@/context/I18nContext";
@@ -18,16 +18,24 @@ import {
   TrendingUp,
   AlertTriangle
 } from "lucide-react";
-import { Restaurant, Order, InventoryItem, MenuCategory, MenuItem } from "@/types";
-import { useCallback } from "react";
+import { Restaurant, Order, InventoryItem, MenuCategory, MenuItem, OrderItem } from "@/types";
 import { AddOrderModal } from "./Restaurant/AddOrderModal";
 import { AddMenuItemModal } from "./Restaurant/AddMenuItemModal";
+import { AddInventoryItemModal } from "./Restaurant/AddInventoryItemModal";
+import { KDSModule } from "./Restaurant/KDSModule";
 import { CreateRestaurantModal } from "./Restaurant/CreateRestaurantModal";
 
 export function RestaurantModule() {
   const { t } = useI18n();
-  const { hotelId, refreshData } = useAura();
-  const [activeTab, setActiveTab] = useState("ORDERS"); // ORDERS, MENU, INVENTORY
+  const { hotelId, refreshData, role } = useAura();
+  
+  // Set default tab based on role
+  const [activeTab, setActiveTab] = useState(() => {
+    if (role === "COCINERO") return "KDS";
+    if (role === "MESERO") return "ORDERS";
+    return "ORDERS";
+  });
+
   const [restaurantData, setRestaurantData] = useState<{
     restaurants: Restaurant[];
     activeOrders: Order[];
@@ -36,6 +44,7 @@ export function RestaurantModule() {
   const [loading, setLoading] = useState(true);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
   const [isCreateRestaurantModalOpen, setIsCreateRestaurantModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -50,26 +59,25 @@ export function RestaurantModule() {
       });
     }
     setLoading(false);
-    refreshData(); // Sync global dashboard stats
+    refreshData();
   }, [hotelId, refreshData]);
 
   useEffect(() => {
-    let isMounted = true;
-    const init = async () => {
-      await Promise.resolve();
-      if (hotelId && isMounted) {
-        loadData();
+    let mounted = true;
+    (async () => {
+      if (mounted) {
+        await loadData();
       }
-    };
-    init();
-    return () => { isMounted = false; };
-  }, [hotelId, loadData]);
+    })();
+    return () => { mounted = false; };
+  }, [loadData]);
 
   const tabs = [
-    { id: "ORDERS", label: t("rest.tab.orders"), icon: ClipboardList },
-    { id: "MENU", label: t("rest.tab.menu"), icon: Utensils },
-    { id: "INVENTORY", label: t("rest.tab.inventory"), icon: Package },
-  ];
+    { id: "ORDERS", label: t("rest.tab.orders"), icon: ClipboardList, roles: ["ADMIN", "GERENTE", "CAJERO", "MESERO"] },
+    { id: "MENU", label: t("rest.tab.menu"), icon: Utensils, roles: ["ADMIN", "GERENTE", "COCINERO", "CAJERO"] },
+    { id: "INVENTORY", label: t("rest.tab.inventory"), icon: Package, roles: ["ADMIN", "GERENTE", "COCINERO"] },
+    { id: "KDS", label: "Cocina (KDS)", icon: ChefHat, roles: ["ADMIN", "GERENTE", "COCINERO"] },
+  ].filter(tab => !role || tab.roles.includes(role));
 
   return (
     <div className="space-y-8">
@@ -108,6 +116,12 @@ export function RestaurantModule() {
         </div>
       ) : (
         <AnimatePresence mode="wait">
+          {activeTab === "KDS" && (
+             <motion.div key="kds" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+               <KDSModule />
+             </motion.div>
+          )}
+
           {activeTab === "ORDERS" && (
             <motion.div
               key="orders"
@@ -116,18 +130,19 @@ export function RestaurantModule() {
               exit={{ opacity: 0, y: -20 }}
               className="grid grid-cols-1 xl:grid-cols-3 gap-6"
             >
-              {/* Active Orders Column */}
               <div className="xl:col-span-2 space-y-6">
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.3em] font-institutional">
                     {t("rest.tab.orders")} ACTIVOS
                   </h4>
-                  <button 
-                    onClick={() => setIsOrderModalOpen(true)}
-                    className="bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-white text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-full flex items-center shadow-[0_0_15px_rgba(59,130,246,0.3)] transition group"
-                  >
-                    <Plus size={12} className="mr-2 group-hover:rotate-90 transition-transform" /> {t("rest.order.new")}
-                  </button>
+                  {(role === "ADMIN" || role === "GERENTE" || role === "CAJERO" || role === "MESERO") && (
+                    <button 
+                      onClick={() => setIsOrderModalOpen(true)}
+                      className="bg-[#3B82F6] hover:bg-[#3B82F6]/90 text-white text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-full flex items-center shadow-[0_0_15px_rgba(59,130,246,0.3)] transition group"
+                    >
+                      <Plus size={12} className="mr-2 group-hover:rotate-90 transition-transform" /> {t("rest.order.new")}
+                    </button>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -144,7 +159,6 @@ export function RestaurantModule() {
                 </div>
               </div>
 
-              {/* Sidebar Stats & Alerts */}
               <div className="space-y-6">
                  <h4 className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.3em] font-institutional mb-4">
                   RESUMEN DE COCINA
@@ -176,7 +190,6 @@ export function RestaurantModule() {
                    </div>
                 </div>
 
-                {/* Inventory Alerts */}
                 <div className="glass rounded-4xl p-6 border-[#FF385C]/20 bg-[#FF385C]/5 space-y-4">
                   <div className="flex items-center space-x-2 text-[#FF385C]">
                     <AlertTriangle size={14} />
@@ -212,12 +225,14 @@ export function RestaurantModule() {
                   </div>
                   <input type="text" placeholder="Buscar en el menú..." className="w-full bg-[#0A0A0A] border border-white/5 rounded-full py-3 pl-10 pr-4 text-xs text-white outline-none focus:border-white/20 transition-all font-bold" />
                 </div>
-                <button 
-                  onClick={() => setIsMenuModalOpen(true)}
-                  className="bg-[#FF385C] hover:bg-[#FF385C]/90 text-white text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full flex items-center shadow-[0_0_15px_rgba(255,56,92,0.4)] transition"
-                >
-                  <Plus size={12} className="mr-2" /> {t("rest.menu.add")}
-                </button>
+                {(role === "ADMIN" || role === "GERENTE" || role === "COCINERO") && (
+                  <button 
+                    onClick={() => setIsMenuModalOpen(true)}
+                    className="bg-[#FF385C] hover:bg-[#FF385C]/90 text-white text-[9px] font-black uppercase tracking-widest px-6 py-3 rounded-full flex items-center shadow-[0_0_15px_rgba(255,56,92,0.4)] transition"
+                  >
+                    <Plus size={12} className="mr-2" /> {t("rest.menu.add")}
+                  </button>
+                )}
               </div>
 
               {restaurantData?.restaurants?.map((rest: Restaurant) => (
@@ -260,6 +275,17 @@ export function RestaurantModule() {
               exit={{ opacity: 0, y: -20 }}
               className="glass rounded-4xl border-white/5 overflow-hidden"
             >
+              <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/2">
+                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400">Control de Materia Prima</h3>
+                {(role === "ADMIN" || role === "GERENTE" || role === "COCINERO") && (
+                  <button 
+                    onClick={() => setIsInventoryModalOpen(true)}
+                    className="bg-white/5 hover:bg-white/10 text-white text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all border border-white/5 flex items-center gap-2"
+                  >
+                    <Plus size={12} /> Agregar Insumo
+                  </button>
+                )}
+              </div>
               <table className="w-full text-left">
                 <thead className="border-b border-white/5 bg-white/2">
                   <tr>
@@ -303,12 +329,14 @@ export function RestaurantModule() {
           <h4 className="text-2xl font-black text-white uppercase tracking-tighter mb-4 italic">
             {t("rest.restaurant.empty")}
           </h4>
-          <button 
-            onClick={() => setIsCreateRestaurantModalOpen(true)}
-            className="bg-[#FF385C] hover:bg-[#FF385C]/90 text-white text-[10px] font-black uppercase tracking-[0.3em] px-10 py-5 rounded-full shadow-[0_0_30px_rgba(255,56,92,0.4)] transition-all transform hover:scale-105 active:scale-95"
-          >
-            <Plus size={16} className="inline mr-2 mb-0.5" /> {t("rest.restaurant.create")}
-          </button>
+          {(role === "ADMIN" || role === "GERENTE") && (
+            <button 
+              onClick={() => setIsCreateRestaurantModalOpen(true)}
+              className="bg-[#FF385C] hover:bg-[#FF385C]/90 text-white text-[10px] font-black uppercase tracking-[0.3em] px-10 py-5 rounded-full shadow-[0_0_30px_rgba(255,56,92,0.4)] transition-all transform hover:scale-105 active:scale-95"
+            >
+              <Plus size={16} className="inline mr-2 mb-0.5" /> {t("rest.restaurant.create")}
+            </button>
+          )}
         </div>
       )}
 
@@ -316,6 +344,13 @@ export function RestaurantModule() {
       <CreateRestaurantModal 
         isOpen={isCreateRestaurantModalOpen}
         onClose={() => setIsCreateRestaurantModalOpen(false)}
+        hotelId={hotelId || ""}
+        onSuccess={loadData}
+      />
+
+      <AddInventoryItemModal 
+        isOpen={isInventoryModalOpen}
+        onClose={() => setIsInventoryModalOpen(false)}
         hotelId={hotelId || ""}
         onSuccess={loadData}
       />
@@ -332,7 +367,7 @@ export function RestaurantModule() {
           <AddMenuItemModal 
             isOpen={isMenuModalOpen}
             onClose={() => setIsMenuModalOpen(false)}
-            restaurant={restaurantData.restaurants[0]} // Using first restaurant as context
+            restaurant={restaurantData.restaurants[0]}
             onSuccess={loadData}
           />
         </>
@@ -376,8 +411,8 @@ function OrderCard({ order, t, onUpdateStatus }: { order: Order, t: (key: keyof 
                 <ClipboardList size={14} className="text-zinc-500" />
              </div>
              <div>
-               <p className="text-[10px] font-black text-white uppercase tracking-wider">{t("rest.order.table")}: {order.roomNumber || "Salón"}</p>
-               <p className="text-[7px] font-bold text-zinc-500 uppercase">{new Date(order.createdAt).toLocaleTimeString()}</p>
+                <p className="text-[10px] font-black text-white uppercase tracking-wider">{t("rest.order.table")}: {order.roomNumber || "Salón"}</p>
+                <p className="text-[7px] font-bold text-zinc-500 uppercase">{new Date(order.createdAt).toLocaleTimeString()}</p>
              </div>
           </div>
           <span className={clsx("px-2 py-0.5 rounded-full text-[8px] font-black uppercase border", statusColors[order.status])}>
@@ -386,7 +421,7 @@ function OrderCard({ order, t, onUpdateStatus }: { order: Order, t: (key: keyof 
         </div>
 
         <div className="space-y-2 mb-6">
-          {order.items.map((item: import('@/types').OrderItem) => (
+          {order.items.map((item: OrderItem) => (
             <div key={item.id} className="flex justify-between text-[10px]">
               <span className="text-zinc-400 font-bold"><span className="text-[#FF385C] mr-1">{item.quantity}x</span> {item.menuItem.name}</span>
               <span className="text-white font-black">${item.price * item.quantity}</span>

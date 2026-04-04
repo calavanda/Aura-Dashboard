@@ -16,6 +16,9 @@ enum Role {
   ADMIN
   GERENTE
   RESERVADOR
+  CAJERO
+  MESERO
+  COCINERO
 }
 
 enum RoomStatus {
@@ -51,13 +54,15 @@ model Hotel {
   restaurants    Restaurant[]
   orders         Order[]
   inventory      InventoryItem[]
+  expenses       Expense[]
+  devices        Device[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 }
 
 model User {
   id        String     @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId   String     @unique
+  clerkId   String?    @unique
   email     String     @unique
   role      Role       @default(RESERVADOR)
   hotelId   String?    @db.ObjectId
@@ -202,4 +207,24 @@ model AuditLog {
   action    String
   details   String?
   timestamp DateTime @default(now())
+}
+
+model Expense {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  amount      Float
+  category    String   // LUZ, AGUA, RENTA, NOMINA, INSUMOS, OTROS
+  hotelId     String   @db.ObjectId
+  hotel       Hotel    @relation(fields: [hotelId], references: [id])
+  date        DateTime @default(now())
+}
+
+model Device {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  type      String   // KDS, TERMINAL, MOBILE, PRINTER
+  status    String   @default("ONLINE")
+  hotelId   String   @db.ObjectId
+  hotel     Hotel    @relation(fields: [hotelId], references: [id])
+  lastSeen  DateTime @default(now())
 }
