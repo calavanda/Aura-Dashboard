@@ -112,13 +112,20 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
             className={cn(
               "group flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-300 relative overflow-hidden",
               activeTab === item.id
-                ? "text-white bg-white/5"
-                : "text-zinc-500 hover:text-white hover:translate-x-1"
+                ? "text-white"
+                : "text-zinc-500 hover:text-white hover:bg-white/2"
             )}
           >
+            {activeTab === item.id && (
+              <motion.div 
+                layoutId="active-pill" 
+                className="absolute inset-x-0 inset-y-0 bg-white/5 border border-white/5 rounded-xl -z-10"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+              />
+            )}
             <div className="flex items-center space-x-4 relative z-10">
-              <item.icon size={18} className={activeTab === item.id ? "text-[#3B82F6]" : "group-hover:text-white transition-colors"} />
-              <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", activeTab === item.id ? "text-white" : "text-zinc-500")}>
+              <item.icon size={18} className={cn("transition-all duration-500", activeTab === item.id ? "text-[#FF385C] scale-110" : "group-hover:text-white group-hover:scale-110")} />
+              <span className={cn("text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-300", activeTab === item.id ? "text-white" : "text-zinc-500 group-hover:text-zinc-300")}>
                 {item.id === "Dashboard" && t("nav.dashboard")}
                 {item.id === "Reservaciones" && t("nav.reservations")}
                 {item.id === "Mis Propiedades" && t("nav.properties")}
@@ -133,7 +140,8 @@ export function Sidebar({ activeTab, setActiveTab, role, isCreator }: SidebarPro
             {activeTab === item.id && (
               <motion.div 
                 layoutId="active-indicator" 
-                className="absolute left-0 w-1 h-5 bg-[#3B82F6] rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+                className="absolute left-0 w-1 h-4 bg-[#FF385C] rounded-full shadow-[0_0_10px_#FF385C]" 
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
               />
             )}
           </motion.div>
@@ -221,18 +229,26 @@ function SidebarItem({ icon: Icon, label, active, onClick }: { icon: React.Eleme
       className={cn(
         "group flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-300 relative overflow-hidden",
         active 
-          ? "text-white bg-white/5" 
-          : "text-zinc-500 hover:text-white hover:translate-x-1"
+          ? "text-white" 
+          : "text-zinc-500 hover:text-white hover:bg-white/2"
       )}
     >
+      {active && (
+        <motion.div 
+          layoutId="active-pill" 
+          className="absolute inset-x-0 inset-y-0 bg-white/5 border border-white/5 rounded-xl -z-10"
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
+      )}
       <div className="flex items-center space-x-4 relative z-10">
-        <Icon size={18} className={active ? "text-[#3B82F6]" : "group-hover:text-white transition-colors"} />
-        <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", active ? "text-white" : "text-zinc-500")}>{label}</span>
+        <Icon size={18} className={cn("transition-all duration-500", active ? "text-[#FF385C] scale-110" : "group-hover:text-white group-hover:scale-110")} />
+        <span className={cn("text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-300", active ? "text-white" : "text-zinc-500 group-hover:text-zinc-300")}>{label}</span>
       </div>
       {active && (
         <motion.div 
-          layoutId="active-indicator-sub" 
-          className="absolute left-0 w-1 h-5 bg-[#3B82F6] rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+          layoutId="active-indicator" 
+          className="absolute left-0 w-1 h-4 bg-[#FF385C] rounded-full shadow-[0_0_10px_#FF385C]" 
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
         />
       )}
     </div>

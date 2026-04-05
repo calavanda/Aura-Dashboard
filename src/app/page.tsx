@@ -8,8 +8,8 @@ import { ReservationList } from "@/components/ReservationList";
 import { SetupWizard } from "@/components/Onboarding/SetupWizard";
 import { WelcomeTour } from "@/components/Onboarding/WelcomeTour";
 import { AddRoomModal } from "@/components/Onboarding/AddRoomModal";
-import { ParticleBackground } from "@/components/ParticleBackground";
-import { motion, AnimatePresence } from "framer-motion";
+import { AuraBackground } from "@/components/AuraBackground";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { 
   UserButton,
   useUser 
@@ -40,18 +40,57 @@ import { AdvancedModule } from "@/components/AdvancedModule";
 import { RestaurantModule } from "@/components/RestaurantModule";
 
 function StatCard({ title, value, change, icon: Icon, trend }: { title: string, value: string, change: string, icon: React.ElementType, trend: "up" | "down" | "neutral" }) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseXSpring = useSpring(x);
+  const mouseYSpring = useSpring(y);
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const xPct = (mouseX / width) - 0.5;
+    const yPct = (mouseY / height) - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02, translateY: -5 }}
-      className="glass p-8 rounded-[2.5rem] flex flex-col space-y-4 group transition-all duration-500 relative overflow-hidden"
+      variants={{
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d",
+      }}
+      whileHover={{ scale: 1.02 }}
+      className="glass p-8 rounded-[2.5rem] flex flex-col space-y-4 group transition-all duration-500 relative overflow-hidden active:scale-95"
     >
-      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+      <div 
+        style={{ transform: "translateZ(50px)" }}
+        className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity"
+      >
         <Icon size={80} className="text-[#FF385C]" />
       </div>
       
-      <div className="flex justify-between items-start relative z-10">
+      <div 
+        style={{ transform: "translateZ(30px)" }}
+        className="flex justify-between items-start relative z-10"
+      >
         <div className={`p-4 rounded-2xl bg-white/5 border border-white/5 transition-transform group-hover:bg-primary/10 group-hover:border-primary/20`}>
           <Icon size={24} className="text-white group-hover:text-primary transition-colors" />
         </div>
@@ -65,7 +104,10 @@ function StatCard({ title, value, change, icon: Icon, trend }: { title: string, 
         </div>
       </div>
       
-      <div className="pt-2 relative z-10">
+      <div 
+        style={{ transform: "translateZ(40px)" }}
+        className="pt-2 relative z-10"
+      >
         <h3 className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em] font-institutional">{title}</h3>
         <p className="text-4xl font-black mt-2 tracking-tighter text-white drop-shadow-sm">{value}</p>
       </div>
@@ -104,12 +146,17 @@ function GastroDashboardHome() {
       </div>
 
       {/* Stats Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
+      <motion.section 
+        variants={{
+          visible: { transition: { staggerChildren: 0.1 } }
+        }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10"
+      >
         <StatCard title="Ventas del Día" value="$0" change="0%" trend="neutral" icon={CreditCard} />
         <StatCard title="Pedidos Activos" value={`${activeOrders.length}`} change="0" trend="neutral" icon={Clock} />
         <StatCard title="Stock Bajo" value={`${lowStockCount}`} change={lowStockCount > 0 ? "Revisar" : "Ok"} trend={lowStockCount > 0 ? "down" : "neutral"} icon={AlertTriangle} />
         <StatCard title="Platillos en Menú" value={`${totalItems}`} change="Estable" trend="neutral" icon={Utensils} />
-      </section>
+      </motion.section>
 
       {/* Main Content Areas */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-12 relative z-10">
@@ -160,12 +207,17 @@ function DashboardHome({ setIsAddRoomModalOpen }: { setIsAddRoomModalOpen: (open
       </div>
 
       {/* Stats Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
+      <motion.section 
+        variants={{
+          visible: { transition: { staggerChildren: 0.1 } }
+        }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10"
+      >
         <StatCard title={t("dash.occupancy.title")} value={`${occupancyRate}%`} change="0%" trend="neutral" icon={Bed} />
         <StatCard title={t("dash.revpar.title")} value="$0" change="0%" trend="neutral" icon={CreditCard} />
         <StatCard title={t("dash.checkin.title")} value={`${reservations.length}`} change={t("dash.stable")} trend="neutral" icon={CheckCircle2} />
         <StatCard title={t("dash.tasks.title")} value="0" change="0" trend="neutral" icon={Clock} />
-      </section>
+      </motion.section>
 
       {/* Main Content Areas */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-12 relative z-10">
@@ -277,7 +329,7 @@ function AuraDashboardContent() {
 
   return (
     <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-[#FF385C] selection:text-white overflow-hidden relative" suppressHydrationWarning>
-      <ParticleBackground />
+      <AuraBackground />
       
       <AddRoomModal 
         isOpen={isAddRoomModalOpen} 
@@ -349,7 +401,27 @@ function AuraDashboardContent() {
           <div className="p-12 lg:p-16 max-w-[1700px] mx-auto min-h-[calc(100vh-160px)]">
             <AnimatePresence mode="wait">
               {activeTab === "Dashboard" && (
-                <motion.div key="dash" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} suppressHydrationWarning>
+                <motion.div 
+                  key="dash" 
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: { 
+                      opacity: 1, 
+                      transition: { 
+                        staggerChildren: 0.1,
+                        delayChildren: 0.2
+                      } 
+                    },
+                    exit: { 
+                      opacity: 0,
+                      transition: { staggerChildren: 0.05, staggerDirection: -1 }
+                    }
+                  }}
+                  suppressHydrationWarning
+                >
                   {businessMode === "GASTRONOMY" ? <GastroDashboardHome /> : <DashboardHome setIsAddRoomModalOpen={setIsAddRoomModalOpen} />}
                 </motion.div>
               )}
