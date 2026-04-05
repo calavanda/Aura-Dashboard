@@ -5,54 +5,80 @@ import { motion } from "framer-motion";
 
 export function AuraBackground() {
   return (
-    <div className="fixed inset-0 -z-20 overflow-hidden bg-[#050505] pointer-events-none">
-      {/* Noise Texture Overlay */}
-      <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay z-50 pointer-events-none bg-[url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E')]" />
-
-      {/* Animated Mesh Gradients */}
+    <div className="fixed inset-0 -z-20 overflow-hidden bg-[#020202] pointer-events-none">
+      {/* Primary Aura (Pink/Red) - Very subtle and slow */}
       <motion.div
         animate={{
-          x: ["-20%", "20%", "-20%"],
-          y: ["-20%", "30%", "-20%"],
-          scale: [1, 1.2, 1],
+          scale: [1, 1.1, 1],
+          opacity: [0.03, 0.05, 0.03],
+          x: ["-10%", "5%", "-10%"],
+          y: ["-5%", "10%", "-5%"],
+        }}
+        transition={{
+          duration: 25,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="absolute -top-[10%] -left-[5%] w-[80vw] h-[80vw] bg-[#FF385C] rounded-full blur-[160px]"
+      />
+
+      {/* Secondary Aura (Blue) - Even slower */}
+      <motion.div
+        animate={{
+          scale: [1.1, 1, 1.1],
+          opacity: [0.02, 0.04, 0.02],
+          x: ["10%", "-5%", "10%"],
+          y: ["15%", "0%", "15%"],
+        }}
+        transition={{
+          duration: 35,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="absolute top-[20%] -right-[10%] w-[90vw] h-[90vw] bg-[#3B82F6] rounded-full blur-[180px]"
+      />
+
+      {/* Subtle Bottom Glow */}
+      <motion.div
+        animate={{
+          opacity: [0.02, 0.03, 0.02],
         }}
         transition={{
           duration: 20,
           repeat: Infinity,
           ease: "linear",
         }}
-        className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] bg-[#FF385C]/10 rounded-full blur-[120px]"
+        className="absolute bottom-[-20%] left-[10%] w-[100vw] h-[50vh] bg-gradient-to-t from-[#FF385C]/10 to-transparent blur-[120px]"
       />
 
-      <motion.div
-        animate={{
-          x: ["20%", "-30%", "20%"],
-          y: ["30%", "-10%", "30%"],
-          scale: [1.2, 1, 1.2],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        className="absolute top-[10%] -right-[20%] w-[80vw] h-[80vw] bg-[#3B82F6]/5 rounded-full blur-[150px]"
-      />
+      {/* Elegant Moving "Stars" / Particles */}
+      <div className="absolute inset-0 z-10">
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              opacity: 0,
+              x: `${Math.random() * 100}%`,
+              y: `${Math.random() * 100}%`,
+              scale: Math.random() * 0.5 + 0.5
+            }}
+            animate={{
+              opacity: [0, 0.2, 0],
+              y: ["-2%", "2%"],
+            }}
+            transition={{
+              duration: 8 + Math.random() * 10,
+              repeat: Infinity,
+              delay: Math.random() * 10,
+              ease: "easeInOut"
+            }}
+            className="absolute w-1 h-1 bg-white rounded-full blur-[1px]"
+          />
+        ))}
+      </div>
 
-      <motion.div
-        animate={{
-          x: ["-10%", "10%", "-10%"],
-          y: ["40%", "10%", "40%"],
-        }}
-        transition={{
-          duration: 15,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute bottom-[-10%] left-[20%] w-[60vw] h-[60vw] bg-[#FF385C]/5 rounded-full blur-[100px]"
-      />
-
-      {/* Vignette */}
-      <div className="absolute inset-0 bg-radial-[circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%]" />
+      {/* Dark Vignette to Frame the Content */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]" />
     </div>
   );
 }
