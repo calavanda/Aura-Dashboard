@@ -1,9 +1,36 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
+interface Star {
+  id: number;
+  x: string;
+  y: string;
+  scale: number;
+  duration: number;
+  delay: number;
+}
+
 export function AuraBackground() {
+  const [stars, setStars] = useState<Star[]>([]);
+
+  useEffect(() => {
+    // Generate stars only on the client side
+    const newStars = [...Array(12)].map((_, i) => ({
+      id: i,
+      x: `${Math.random() * 100}%`,
+      y: `${Math.random() * 100}%`,
+      scale: Math.random() * 0.5 + 0.5,
+      duration: 8 + Math.random() * 10,
+      delay: Math.random() * 10,
+    }));
+    
+    // Using a microtask to avoid synchronous setState inside an effect
+    // which satisfies strict mode and avoids cascading render warnings
+    Promise.resolve().then(() => setStars(newStars));
+  }, []);
+
   return (
     <div className="fixed inset-0 -z-20 overflow-hidden bg-[#020202] pointer-events-none">
       {/* Primary Aura (Pink/Red) - Very subtle and slow */}
@@ -48,28 +75,28 @@ export function AuraBackground() {
           repeat: Infinity,
           ease: "linear",
         }}
-        className="absolute bottom-[-20%] left-[10%] w-[100vw] h-[50vh] bg-gradient-to-t from-[#FF385C]/10 to-transparent blur-[120px]"
+        className="absolute bottom-[-20%] left-[10%] w-screen h-[50vh] bg-linear-to-t from-[#FF385C]/10 to-transparent blur-[120px]"
       />
 
       {/* Elegant Moving "Stars" / Particles */}
       <div className="absolute inset-0 z-10">
-        {[...Array(12)].map((_, i) => (
+        {stars.map((star) => (
           <motion.div
-            key={i}
+            key={star.id}
             initial={{ 
               opacity: 0,
-              x: `${Math.random() * 100}%`,
-              y: `${Math.random() * 100}%`,
-              scale: Math.random() * 0.5 + 0.5
+              x: star.x,
+              y: star.y,
+              scale: star.scale
             }}
             animate={{
               opacity: [0, 0.2, 0],
               y: ["-2%", "2%"],
             }}
             transition={{
-              duration: 8 + Math.random() * 10,
+              duration: star.duration,
               repeat: Infinity,
-              delay: Math.random() * 10,
+              delay: star.delay,
               ease: "easeInOut"
             }}
             className="absolute w-1 h-1 bg-white rounded-full blur-[1px]"

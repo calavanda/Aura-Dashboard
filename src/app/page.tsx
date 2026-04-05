@@ -356,7 +356,7 @@ function AuraDashboardContent() {
           <TrialBanner />
 
           {/* Header */}
-          <header className="px-12 py-12 flex justify-between items-center sticky top-0 bg-[#050505]/60 backdrop-blur-3xl z-40">
+          <header className="px-12 py-10 flex justify-between items-center sticky top-0 bg-[#050505]/60 backdrop-blur-3xl z-40 transition-all duration-300">
             <motion.div 
               key={activeTab}
               initial={{ opacity: 0, x: -10 }}

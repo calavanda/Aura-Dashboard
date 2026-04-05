@@ -52,10 +52,7 @@ export function GuestModule() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto px-4 md:px-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h3 className="text-4xl font-black font-institutional text-white tracking-tighter uppercase">{t("guest.title")}</h3>
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] font-institutional mt-3">{t("guest.subtitle")}</p>
-        </div>
+        <div />
         <div className="flex gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={16} />

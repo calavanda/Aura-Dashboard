@@ -89,12 +89,7 @@ export function RestaurantModule() {
       {/* Header */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 px-2">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-          <div>
-            <h3 className="text-4xl font-black tracking-tighter text-white font-institutional">{t("rest.title")}</h3>
-            <p className="text-zinc-500 text-[10px] uppercase font-institutional tracking-[0.3em] font-black mt-2">
-              {t("rest.subtitle")}
-            </p>
-          </div>
+          <div />
           
           {/* Restaurant Selector */}
           {restaurantData?.restaurants && restaurantData.restaurants.length > 1 && (

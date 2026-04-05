@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Info, AlertTriangle, Sparkles, CheckCircle2 } from "lucide-react";
+import { Bell, Info, CheckCircle2 } from "lucide-react";
 import { useAura } from "@/context/AuraContext";
 
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
-  const { subscription, trialDaysLeft, isOwner } = useAura();
+  const { isOwner } = useAura();
 
   const [notifications, setNotifications] = useState([
     {
@@ -58,14 +58,14 @@ export function NotificationCenter() {
         {isOpen && (
           <>
             <div 
-              className="fixed inset-0 z-40" 
+              className="fixed inset-0 z-100 bg-black/20 backdrop-blur-sm" 
               onClick={() => setIsOpen(false)}
             ></div>
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute right-0 mt-4 w-80 glass border-border/50 rounded-[32px] shadow-2xl z-50 overflow-hidden"
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              className="absolute right-0 mt-6 w-96 glass border-white/10 rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] z-110"
             >
               <div className="p-6 border-b border-border/50 bg-background/50 flex justify-between items-center">
                 <h4 className="font-bold font-outfit">Notificaciones</h4>
@@ -87,20 +87,24 @@ export function NotificationCenter() {
                       onClick={() => handleNotificationClick(n.id)}
                       className={`p-4 border-b border-border/20 hover:bg-white/5 transition-colors cursor-pointer group/item relative ${n.isRead ? 'opacity-40' : ''}`}
                     >
-                      <div className="flex gap-4">
-                        <div className="mt-1">{n.icon}</div>
-                        <div className="flex-1 space-y-1">
-                          <div className="flex justify-between items-start">
-                            <p className="text-xs font-bold text-foreground">{n.title}</p>
-                            <p className="text-[10px] text-muted">{n.time}</p>
+                      <div className="flex gap-5">
+                        <div className="mt-1 shrink-0">{n.icon}</div>
+                        <div className="flex-1 min-w-0 pr-6">
+                          <div className="flex justify-between items-start gap-2">
+                            <p className="text-[13px] font-bold text-white truncate">{n.title}</p>
+                            <p className="text-[10px] text-zinc-500 font-medium whitespace-nowrap">{n.time}</p>
                           </div>
-                          <p className="text-[10px] text-muted leading-relaxed uppercase tracking-wider">
+                          <p className="text-[11px] text-zinc-400 leading-relaxed uppercase tracking-wider mt-1">
                             {n.description}
                           </p>
                         </div>
                       </div>
                       {!n.isRead && (
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-primary rounded-full" />
+                        <motion.div 
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute right-6 top-1/2 -translate-y-1/2 w-2 h-2 bg-[#FF385C] rounded-full shadow-[0_0_10px_#FF385C]" 
+                        />
                       )}
                     </div>
                   ))

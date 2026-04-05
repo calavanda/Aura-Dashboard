@@ -25,12 +25,7 @@ export function FinanceModule() {
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto px-4 md:px-0">
-      <div className="flex justify-between items-end">
-        <div>
-          <h3 className="text-4xl font-black font-institutional text-white tracking-tighter uppercase">{t("fin.title")}</h3>
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] font-institutional mt-3">{t("fin.subtitle")}</p>
-        </div>
-      </div>
+      <div />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <FinanceCard 
@@ -111,7 +106,7 @@ export function FinanceModule() {
   );
 }
 
-function FinanceCard({ title, value, trend, positive, icon: Icon, color, bg }: { title: string, value: string, trend: string, positive: boolean, icon: any, color: string, bg: string }) {
+function FinanceCard({ title, value, trend, positive, icon: Icon, color, bg }: { title: string, value: string, trend: string, positive: boolean, icon: React.ElementType, color: string, bg: string }) {
   return (
     <motion.div 
       whileHover={{ y: -5 }}
